@@ -6,11 +6,11 @@ https://adoptium.net/temurin/releases/?os=linux&package=jdk&version=8&arch=x64
 extract and move to /usr/lib/jvm/
 
 ### Set JAVA_HOME and PATH
-export JAVA_HOME=/usr/lib/jvm/jdk8u402-b06
+export JAVA_HOME=/usr/lib/jvm/jdk8u402-b06 </br>
 export PATH=$JAVA_HOME/bin:$PATH
 
 ### Download Globalplatformpro and change version
-git clone from repo
+git clone from repo </br>
 git checkout 15bdd14
 
 ### Build project Globalplatformpro
