@@ -61,38 +61,38 @@ public class Card extends Applet implements ISO7816 {
         Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, data, (short) 0, length);
     }
 
-    // Issue season ticket method
-    public void issueSeasonTicket(int duration) {
-        // Set the expiration date of the season ticket
-        JCSystem.getCurrentDate(this.expirationYear, this.expirationMonth, this.expirationDay);
-        Util.addDay(this.expirationYear, this.expirationMonth, this.expirationDay, duration);
-        System.out.println("Issuing a season ticket valid until " + expirationYear + "-" + expirationMonth + "-" + expirationDay + ".");
-    }
-
-    // Check if season ticket is valid
-    public boolean isSeasonTicketValid() {
-        short currentYear;
-        byte currentMonth;
-        byte currentDay;
-        JCSystem.getCurrentDate(currentYear, currentMonth, currentDay);
-        return Util.compareDate(currentYear, currentMonth, currentDay, expirationYear, expirationMonth, expirationDay) <= 0;
-    }
-
-    // Issue 10-entry ticket method
-    public void issueEntryTicket() {
-        entryCounter = 10;
-        System.out.println("Issuing a 10-entry ticket with 10 entries.");
-    }
-
-    // Use entry method
-    public void useEntry() {
-        if (entryCounter > 0) {
-            entryCounter--;
-            System.out.println("One entry used, " + entryCounter + " entries remaining.");
-        } else {
-            System.out.println("No entries remaining. Please reload or issue a new ticket.");
-        }
-    }
+//    // Issue season ticket method
+//    public void issueSeasonTicket(int duration) {
+//        // Set the expiration date of the season ticket
+//        JCSystem.getCurrentDate(this.expirationYear, this.expirationMonth, this.expirationDay);
+//        Util.addDay(this.expirationYear, this.expirationMonth, this.expirationDay, duration);
+//        System.out.println("Issuing a season ticket valid until " + expirationYear + "-" + expirationMonth + "-" + expirationDay + ".");
+//    }
+//
+//    // Check if season ticket is valid
+//    public boolean isSeasonTicketValid() {
+//        short currentYear;
+//        byte currentMonth;
+//        byte currentDay;
+//        JCSystem.getCurrentDate(currentYear, currentMonth, currentDay);
+//        return Util.compareDate(currentYear, currentMonth, currentDay, expirationYear, expirationMonth, expirationDay) <= 0;
+//    }
+//
+//    // Issue 10-entry ticket method
+//    public void issueEntryTicket() {
+//        entryCounter = 10;
+//        System.out.println("Issuing a 10-entry ticket with 10 entries.");
+//    }
+//
+//    // Use entry method
+//    public void useEntry() {
+//        if (entryCounter > 0) {
+//            entryCounter--;
+//            System.out.println("One entry used, " + entryCounter + " entries remaining.");
+//        } else {
+//            System.out.println("No entries remaining. Please reload or issue a new ticket.");
+//        }
+//    }
 
     // Check remaining entries
     public byte getRemainingEntries() {
