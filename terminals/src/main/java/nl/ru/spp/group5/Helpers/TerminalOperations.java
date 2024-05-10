@@ -1,3 +1,5 @@
+package nl.ru.spp.group5.Helpers;
+
 public class TerminalOperations {
 
     // Placeholder for the public key of the vending machine (Kvending)

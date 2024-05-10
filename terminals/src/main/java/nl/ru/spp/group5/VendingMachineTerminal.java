@@ -1,10 +1,19 @@
-public class VendingMachineOperations {
+package nl.ru.spp.group5;
 
+import java.util.Scanner;
+import javax.smartcardio.*;
+
+public class VendingMachineTerminal {
     // Private key of the vending machine (Placeholder)
     private static final byte[] kvending = {/* ... */};
 
     // Public key for verifying certificates (Placeholder)
     private static final byte[] Kvending = {/* ... */};
+    
+    public static void main(String[] args){
+        System.out.println("This is the vending machine terminal");
+    }
+
 
     // Method to buy a season ticket
     public String buySeasonTicket(String cardID, String startDate, String endDate) {
@@ -44,6 +53,4 @@ public class VendingMachineOperations {
     private void updateEntryCount(String cardID, int newEntries) {
         // Logic to update the entry count on the card or in the database
     }
-
-
 }

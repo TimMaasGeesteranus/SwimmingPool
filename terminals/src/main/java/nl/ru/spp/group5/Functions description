@@ -1,5 +1,6 @@
-0. CardReaderUtil
+0. CardReaderUtil (Code is now in Terminal)
 Sandbox for card reader
+
 1. Card Management
 initializeCard(): Initializes a new card by setting up its unique ID (IDcard) and loading the symmetric key (Kcard).
 issueCard(type, duration): Issues a new card with specified type (season or 10-entry ticket) and duration for season tickets.
@@ -8,17 +9,20 @@ blockCard(cardId): Blocks a card from further use.
 unblockCard(cardId): Unblocks a previously blocked card.
 checkCardValidity(cardId): Checks whether the card is valid for entry (not blocked, has entries left, or valid season ticket).
 updateCardEntries(cardId, entries): Updates the number of entries on a 10-entry ticket card.
-2. Vending Machine Operations
+
+2. Vending Machine Operations (Code is now in VendingMachineTerminal)
 processCardSale(cardType, duration): Processes the sale of a new card, setting the type (season or 10-entry) and duration for season tickets.
 processCardRecharge(cardId, type): Handles the recharging of an existing card.
 generateCertificate(cardId, type, duration): Generates a certificate for season tickets, signed with the vending machine's private key.
 logTransaction(cardId, transactionType): Logs the transaction details for sales or recharges.
+
 3. Terminal Operations
 authenticateCard(cardId): Performs mutual authentication between the card and terminal.
 verifyEntry(cardId): Verifies if the card has a valid entry for access.
 deductEntry(cardId): Deducts an entry from a 10-entry ticket.
 logAccessEvent(cardId, eventType): Logs access events at the terminal.
 checkSeasonTicketValidity(cardId): Checks the validity of a season ticket against the current date.
+
 4. Security Protocols
 mutualAuthentication(cardId, terminalId): Performs mutual authentication between card and terminal/vending machine.
 deriveSessionKey(cardKey, nonce): Derives a session key from the card's symmetric key and a nonce.
@@ -26,9 +30,11 @@ generateMAC(message, sessionKey): Generates a Message Authentication Code (MAC) 
 verifyCertificate(cert, publicKey): Verifies the certificate of a season ticket using the public key of the vending machine.
 encryptData(data, key): Encrypts data using the given key.
 decryptData(data, key): Decrypts data using the given key.
+
 5. Logging and Audit
 logEvent(eventType, details): Logs different types of events, such as transactions, access attempts, etc.
 auditLogs(): Function to audit logs for irregularities or security breaches.
+
 6. Utility Functions
 generateNonce(): Generates a nonce for use in cryptographic protocols.
 getCurrentDate(): Retrieves the current date for checking season ticket validity
