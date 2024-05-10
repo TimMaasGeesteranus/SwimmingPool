@@ -1,4 +1,4 @@
-package nl.ru.swimmingpool.card;
+package nl.ru.spp.group5;
 
 import javacard.framework.*;
 
