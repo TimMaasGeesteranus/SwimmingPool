@@ -23,8 +23,8 @@ public class Card_Managment {
     }
 
     // Blocks a card from further use
-    public void blockCard(String cardId) {
-        // Code to block a card
+    public static void blockCard(String cardId) {
+        // TODO: disable symmetric key linked to cardID
     }
 
     // Unblocks a previously blocked card
