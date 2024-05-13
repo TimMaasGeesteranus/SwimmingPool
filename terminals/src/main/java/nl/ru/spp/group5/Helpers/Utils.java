@@ -4,7 +4,7 @@ import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class UtilityFunctions {
+public class Utils {
 
     // Method to generate a nonce for cryptographic protocols
     public static byte[] generateNonce() {
@@ -19,4 +19,9 @@ public class UtilityFunctions {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         return dateFormat.format(new Date());
     }
+
+    public static void clearScreen() {  
+        System.out.print("\033[H\033[2J");  
+        System.out.flush();  
+    }  
 }
