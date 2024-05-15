@@ -14,7 +14,7 @@ JCARDSIM=jcardsim-3.0.4-SNAPSHOT
 # way more than is probably needed
 JC_CLASSPATH=${JC_HOME}/lib/apdutool.jar:${JC_HOME}/lib/apduio.jar:${JC_HOME}/lib/converter.jar:${JC_HOME}/lib/jcwde.jar:${JC_HOME}/lib/scriptgen.jar:${JC_HOME}/lib/offcardverifier.jar:${JC_HOME}/lib/api.jar:${JC_HOME}/lib/installer.jar:${JC_HOME}/lib/capdump.jar:${JC_HOME}/samples/classes:${CLASSPATH}
 
-all: applet terminal quicktest swimmingpool
+all: applet terminal quicktest code
 
 # Compilation rules for CalcApplet
 applet: CalcApplet/bin/CalcApplet.class 
@@ -43,21 +43,21 @@ runterminal:
 	# Runs the GUI terminal
 	java -cp util/jcardsim/${JCARDSIM}.jar:CalcTerminal/bin:CalcApplet/bin terminal.CalcTerminal
 
-# SwimmingPool project specific variables
-SP_SRC_DIR=SwimmingPool/card/src/main/java
-SP_BIN_DIR=SwimmingPool/bin
-SP_PACKAGE=nl.ru.spp.groupname
+# code project specific variables
+SP_SRC_DIR=code/card/src/main/java
+SP_BIN_DIR=code/bin
+SP_PACKAGE=nl/ru/spp/group5
 SP_MAIN_CLASS=Card
 
-# Compile the SwimmingPool project
-swimmingpool: ${SP_BIN_DIR}/${SP_PACKAGE}/${SP_MAIN_CLASS}.class
+# Compile the code project
+code: ${SP_BIN_DIR}/${SP_PACKAGE}/${SP_MAIN_CLASS}.class
 
 ${SP_BIN_DIR}/${SP_PACKAGE}/${SP_MAIN_CLASS}.class: ${SP_SRC_DIR}/${SP_PACKAGE}/${SP_MAIN_CLASS}.java
 	@echo "Compiling ${SP_MAIN_CLASS}.java"
 	javac -d ${SP_BIN_DIR} -cp "${JC_CLASSPATH}" $<
 
-# Run the compiled Java program from the SwimmingPool project
-runswimmingpool:
+# Run the compiled Java program from the code project
+runcode:
 	@echo "Running ${SP_MAIN_CLASS} from classpath: ${SP_BIN_DIR}"
 	java -cp "${SP_BIN_DIR}" ${SP_PACKAGE}.${SP_MAIN_CLASS}
 
@@ -67,7 +67,7 @@ clean:
 	rm -rf CalcTerminal/bin/*
 	rm -rf ${SP_BIN_DIR}/*
 
-.PHONY: all applet terminal quicktest runquicktest runterminal swimmingpool runswimmingpool clean
+.PHONY: all applet terminal quicktest runquicktest runterminal code runcode clean
 
 
-# javac -d SwimmingPool/bin -cp "util/java_card_kit-2_2_1/lib/apdutool.jar:util/java_card_kit-2_2_1/lib/apduio.jar:util/java_card_kit-2_2_1/lib/converter.jar:util/java_card_kit-2_2_1/lib/jcwde.jar:util/java_card_kit-2_2_1/lib/scriptgen.jar:util/java_card_kit-2_2_1/lib/offcardverifier.jar:util/java_card_kit-2_2_1/lib/api.jar:util/java_card_kit-2_2_1/lib/installer.jar:util/java_card_kit-2_2_1/lib/capdump.jar" SwimmingPool/card/src/main/java/nl/ru/spp/groupname/Card.java
+# javac -d code/bin -cp "util/java_card_kit-2_2_1/lib/apdutool.jar:util/java_card_kit-2_2_1/lib/apduio.jar:util/java_card_kit-2_2_1/lib/converter.jar:util/java_card_kit-2_2_1/lib/jcwde.jar:util/java_card_kit-2_2_1/lib/scriptgen.jar:util/java_card_kit-2_2_1/lib/offcardverifier.jar:util/java_card_kit-2_2_1/lib/api.jar:util/java_card_kit-2_2_1/lib/installer.jar:util/java_card_kit-2_2_1/lib/capdump.jar" code/card/src/main/java/nl/ru/spp/group5/Card.java
