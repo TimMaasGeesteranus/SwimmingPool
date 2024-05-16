@@ -65,9 +65,9 @@ public class Card extends Applet {
 
     // Simulate setting the current date
     private void setCurrentDate() {
-        this.expirationYear = 2023; // Example year
-        this.expirationMonth = 10;  // Example month
-        this.expirationDay = 15;    // Example day
+        this.expirationYear = 2024; // Example year
+        this.expirationMonth = 11;  // Example month
+        this.expirationDay = 30;    // Example day
     }
 
     // Add days to the expiration date
