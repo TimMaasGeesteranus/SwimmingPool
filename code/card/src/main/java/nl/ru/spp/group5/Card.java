@@ -2,7 +2,12 @@ package nl.ru.spp.group5;
 
 import javacard.framework.*;
 
-public class Card extends Applet implements ISO7816 {
+public class Card extends Applet {
+
+    private short expirationYear;
+    private byte expirationMonth;
+    private byte expirationDay;
+    private byte entryCounter;
 
     // Instruction codes
     private static final byte INS_GET_DATA = (byte) 0x00;
@@ -10,23 +15,21 @@ public class Card extends Applet implements ISO7816 {
 
     // Data buffer
     private byte[] data;
-    private byte entryCounter;
 
     // Constructor
-    Card() {
-        // Initialize buffer and entry counter
+    private Card() {
         data = new byte[256];
-        entryCounter = 10; 
+        entryCounter = 10;
         register();
     }
 
-    // Install method
-    public static void install(byte[] buffer, short offset, byte length) throws SystemException {
+    // Install method for Java Card
+    public static void install(byte[] buffer, short offset, byte length) {
         new Card();
     }
 
-    // Process method
-    public void process(APDU apdu) throws ISOException {
+    // Process incoming APDUs
+    public void process(APDU apdu) {
         byte[] buffer = apdu.getBuffer();
         if (selectingApplet()) {
             return;
@@ -41,12 +44,11 @@ public class Card extends Applet implements ISO7816 {
                 setData(apdu);
                 break;
             default:
-                // Respond with an error for unsupported instructions
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
         }
     }
 
-    // Get data method
+    // Get data from the card
     private void getData(APDU apdu) {
         byte[] buffer = apdu.getBuffer();
         short length = (short) data.length;
@@ -54,45 +56,61 @@ public class Card extends Applet implements ISO7816 {
         apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, length);
     }
 
-    // Set data method
+    // Set data to the card
     private void setData(APDU apdu) {
         byte[] buffer = apdu.getBuffer();
         short length = apdu.setIncomingAndReceive();
         Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, data, (short) 0, length);
     }
 
-//    // Issue season ticket method
-//    public void issueSeasonTicket(int duration) {
-//        // Set the expiration date of the season ticket
-//        JCSystem.getCurrentDate(this.expirationYear, this.expirationMonth, this.expirationDay);
-//        Util.addDay(this.expirationYear, this.expirationMonth, this.expirationDay, duration);
-//        System.out.println("Issuing a season ticket valid until " + expirationYear + "-" + expirationMonth + "-" + expirationDay + ".");
-//    }
-//
-//    // Check if season ticket is valid
-//    public boolean isSeasonTicketValid() {
-//        short currentYear;
-//        byte currentMonth;
-//        byte currentDay;
-//        JCSystem.getCurrentDate(currentYear, currentMonth, currentDay);
-//        return Util.compareDate(currentYear, currentMonth, currentDay, expirationYear, expirationMonth, expirationDay) <= 0;
-//    }
-//
-//    // Issue 10-entry ticket method
-//    public void issueEntryTicket() {
-//        entryCounter = 10;
-//        System.out.println("Issuing a 10-entry ticket with 10 entries.");
-//    }
-//
-//    // Use entry method
-//    public void useEntry() {
-//        if (entryCounter > 0) {
-//            entryCounter--;
-//            System.out.println("One entry used, " + entryCounter + " entries remaining.");
-//        } else {
-//            System.out.println("No entries remaining. Please reload or issue a new ticket.");
-//        }
-//    }
+    // Simulate setting the current date
+    private void setCurrentDate() {
+        this.expirationYear = 2023; // Example year
+        this.expirationMonth = 10;  // Example month
+        this.expirationDay = 15;    // Example day
+    }
+
+    // Add days to the expiration date
+    private void addDaysToExpiration(int days) {
+        this.expirationDay += days;
+        // This is a simplistic method; a real implementation should adjust month and year as needed
+    }
+
+    // Issue a season ticket
+    public void issueSeasonTicket(int duration) {
+        setCurrentDate();
+        addDaysToExpiration(duration);
+        System.out.println("Issuing a season ticket valid until " + expirationYear + "-" + expirationMonth + "-" + expirationDay + ".");
+    }
+
+    // Validate the season ticket
+    public boolean isSeasonTicketValid() {
+        short currentYear = 2023;
+        byte currentMonth = 10;
+        byte currentDay = 16; // Assume the next day for validity check
+
+        // Simple date comparison for validity
+        if (currentYear < expirationYear) return true;
+        else if (currentYear == expirationYear && currentMonth < expirationMonth) return true;
+        else if (currentYear == expirationYear && currentMonth == expirationMonth && currentDay <= expirationDay) return true;
+        return false;
+    }
+
+    // Issue a 10-entry ticket
+    public void issueEntryTicket() {
+        entryCounter = 10;
+        System.out.println("Issuing a 10-entry ticket with 10 entries.");
+    }
+
+    // Use an entry
+    public void useEntry() {
+        if (entryCounter > 0) {
+            entryCounter--;
+            System.out.println("One entry used, " + entryCounter + " entries remaining.");
+        } else {
+            System.out.println("No entries remaining. Please reload or issue a new ticket.");
+        }
+    }
 
     // Check remaining entries
     public byte getRemainingEntries() {
