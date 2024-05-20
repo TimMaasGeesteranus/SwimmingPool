@@ -19,6 +19,8 @@ git checkout 15bdd14
 mvn package && ant
 
 ### Make sure you are in /card dir and java version is 8
+export JAVA_HOME=/usr/lib/jvm/jdk1.8.0_411 </br>
+export PATH=$JAVA_HOME/bin:$PATH
 
 ### Upload applet to card
 mvn clean install
