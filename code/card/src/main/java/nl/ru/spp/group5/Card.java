@@ -71,16 +71,16 @@ public class Card extends Applet {
     }
 
     // Add days to the expiration date
-    private void addDaysToExpiration(int days) {
+    private void addDaysToExpiration(short days) {
         this.expirationDay += days;
         // This is a simplistic method; a real implementation should adjust month and year as needed
     }
 
     // Issue a season ticket
-    public void issueSeasonTicket(int duration) {
+    public void issueSeasonTicket(short duration) {
         setCurrentDate();
         addDaysToExpiration(duration);
-        System.out.println("Issuing a season ticket valid until " + expirationYear + "-" + expirationMonth + "-" + expirationDay + ".");
+        //System.out.println("Issuing a season ticket valid until " + expirationYear + "-" + expirationMonth + "-" + expirationDay + ".");
     }
 
     // Validate the season ticket
@@ -99,16 +99,16 @@ public class Card extends Applet {
     // Issue a 10-entry ticket
     public void issueEntryTicket() {
         entryCounter = 10;
-        System.out.println("Issuing a 10-entry ticket with 10 entries.");
+        //System.out.println("Issuing a 10-entry ticket with 10 entries.");
     }
 
     // Use an entry
     public void useEntry() {
         if (entryCounter > 0) {
             entryCounter--;
-            System.out.println("One entry used, " + entryCounter + " entries remaining.");
+            //System.out.println("One entry used, " + entryCounter + " entries remaining.");
         } else {
-            System.out.println("No entries remaining. Please reload or issue a new ticket.");
+            //System.out.println("No entries remaining. Please reload or issue a new ticket.");
         }
     }
 
