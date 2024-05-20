@@ -6,7 +6,7 @@ import javax.smartcardio.*;
 import nl.ru.spp.group5.Helpers.Card_Managment;
 import nl.ru.spp.group5.Helpers.Utils;
 
-public class VendingMachineTerminal {
+public class VendingMachineTerminal extends Terminal {
     // Private key of the vending machine (Placeholder)
     private final byte[] kvending = {/* ... */};
 
@@ -16,37 +16,13 @@ public class VendingMachineTerminal {
     private static final String employeeCode = "123456";
     
     public static void main(String[] args){
-        Scanner scanner = new Scanner(System.in);
-        Utils.clearScreen();
+        System.out.println("This is the vending machine terminal");
+        VendingMachineTerminal vendingMachineTerminal = new VendingMachineTerminal();
+        vendingMachineTerminal.waitForCard();
+    }
 
-        while (true){
-            System.out.println("Welcome to the vending machine. What do you want to do?");
-            System.out.println("1: Buy a new card");
-            System.out.println("2: Buy a season ticket");
-            System.out.println("3: Buy a 10-entry ticket");
-            System.out.println("4: Block a card (employees only) \n");
+    public VendingMachineTerminal(){
 
-            String userInput = scanner.nextLine();
-
-            switch (userInput) {
-                case "1":
-                    buyNewCard();       
-                    break;
-                case "2":
-                    buySeasonTicket("0",  "testdate", "testdate");
-                    break;
-                case "3":
-                    buyTenEntryTicket("0");
-                    break;
-                case "4":
-                    blockCard("0");
-                    break;           
-                default:
-                    Utils.clearScreen();
-                    System.out.println("\n!! Invalid input. Please enter a number between 1 and 4 !! \n");
-                    break;
-            }
-        }
     }
 
     // Method to block a card
@@ -82,6 +58,41 @@ public class VendingMachineTerminal {
     // Method to buy a new card
     public static void buyNewCard(){
         
+    }
+
+    @Override
+    public void handleCard(CardChannel channel) throws CardException{
+        Scanner scanner = new Scanner(System.in);
+        Utils.clearScreen();
+
+        while (true){
+            System.out.println("Welcome to the vending machine. What do you want to do?");
+            System.out.println("1: Buy a new card");
+            System.out.println("2: Buy a season ticket");
+            System.out.println("3: Buy a 10-entry ticket");
+            System.out.println("4: Block a card (employees only) \n");
+
+            String userInput = scanner.nextLine();
+
+            switch (userInput) {
+                case "1":
+                    buyNewCard();       
+                    break;
+                case "2":
+                    buySeasonTicket("0",  "testdate", "testdate");
+                    break;
+                case "3":
+                    buyTenEntryTicket("0");
+                    break;
+                case "4":
+                    blockCard("0");
+                    break;           
+                default:
+                    Utils.clearScreen();
+                    System.out.println("\n!! Invalid input. Please enter a number between 1 and 4 !! \n");
+                    break;
+            }
+        }
     }
 
 

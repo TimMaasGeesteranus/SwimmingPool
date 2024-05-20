@@ -1,8 +1,10 @@
 package nl.ru.spp.group5;
 
+import java.security.Security;
 import java.util.List;
 import java.util.Scanner;
 import javax.smartcardio.*;
+
 
 public abstract class Terminal{
 
@@ -11,10 +13,12 @@ public abstract class Terminal{
     }
 
     public void waitForCard() {
+
         TerminalFactory factory = TerminalFactory.getDefault();
         CardTerminal terminal = null;
 
         try {
+            System.out.println(factory.terminals().list());
             terminal = factory.terminals().list().get(0);
         } catch (Exception e) {
             System.err.println("Error getting card terminal: " + e.getMessage());
@@ -25,7 +29,8 @@ public abstract class Terminal{
             System.out.println("Waiting for card");
             try {
                 if (terminal.isCardPresent()) {
-                    System.out.println("ahhh cumming");
+                    CardChannel channel = terminal.connect("*").getBasicChannel();
+                    handleCard(channel);
                     // Wait for card to be removed before checking again
                     while (terminal.isCardPresent()) {
                         Thread.sleep(1000);
@@ -38,31 +43,5 @@ public abstract class Terminal{
         }
     }
 
-    public void waitForCardReiner(){
-        String READER_NAME = "cyberJack RFID standard"; // Adjust this as needed
-
-        try {
-            TerminalFactory factory = TerminalFactory.getDefault();
-            List<CardTerminal> terminals = factory.terminals().list();
-            System.out.println("Terminals: " + terminals);
-
-            if (terminals.isEmpty()) {
-                System.out.println("No card terminals found.");
-                return;
-            }
-
-            for (CardTerminal terminal : terminals) {
-                if (terminal.getName().contains(READER_NAME)) {
-                    System.out.println("cyberJack RFID standard card reader is connected.");
-                    return;
-                }
-            }
-
-            System.out.println("cyberJack RFID standard card reader is not connected.");
-            return;
-        } catch (CardException e) {
-            System.err.println("Error checking card readers: " + e.getMessage());
-            return;
-        }
-    }
+    abstract public void handleCard(CardChannel channel) throws CardException;
 }
