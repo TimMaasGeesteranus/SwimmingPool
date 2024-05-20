@@ -73,13 +73,7 @@ public class Card_Managment {
             Card card = terminal.connect("*");
             CardChannel channel = card.getBasicChannel();
 
-            CommandAPDU checkEntriesCommand = new CommandAPDU(new byte[]{
-                (byte) 0x00, // CLA
-                (byte) 0x0B, // INS (custom instruction for checking entries)
-                (byte) 0x00, // P1
-                (byte) 0x00, // P2
-                (byte) 0x00  // Lc
-            });
+            CommandAPDU checkEntriesCommand = new CommandAPDU(0x00, 0x0B, 0x00, 0x00, new byte[0]);
 
             ResponseAPDU response = channel.transmit(checkEntriesCommand);
             if (response.getSW() != 0x9000) {
@@ -103,13 +97,7 @@ public class Card_Managment {
             Card card = terminal.connect("*");
             CardChannel channel = card.getBasicChannel();
 
-            CommandAPDU setEntriesCommand = new CommandAPDU(new byte[]{
-                (byte) 0x00, // CLA
-                (byte) 0x0C, // INS (custom instruction for setting entries)
-                (byte) 0x00, // P1
-                (byte) 0x00, // P2
-                (byte) entries // Lc
-            });
+            CommandAPDU setEntriesCommand = new CommandAPDU(0x00, 0x0C, 0x00, 0x00, new byte[]{(byte) entries});
 
             ResponseAPDU response = channel.transmit(setEntriesCommand);
             if (response.getSW() != 0x9000) {
@@ -136,13 +124,7 @@ public class Card_Managment {
             System.arraycopy(kCard, 0, data, 0, 16);
             System.arraycopy(cardKey, 0, data, 16, 16);
 
-            CommandAPDU issueCardCommand = new CommandAPDU(new byte[]{
-                (byte) 0x00, // CLA
-                (byte) 0x0D, // INS (custom instruction for issuing the card)
-                (byte) 0x00, // P1
-                (byte) 0x00, // P2
-                (byte) data.length // Lc
-            }, data);
+            CommandAPDU issueCardCommand = new CommandAPDU(0x00, 0x0D, 0x00, 0x00, data);
 
             ResponseAPDU response = channel.transmit(issueCardCommand);
             if (response.getSW() != 0x9000) {
@@ -165,13 +147,7 @@ public class Card_Managment {
             Card card = terminal.connect("*");
             CardChannel channel = card.getBasicChannel();
 
-            CommandAPDU saveCertificateCommand = new CommandAPDU(new byte[]{
-                (byte) 0x00, // CLA
-                (byte) 0x0E, // INS (custom instruction for saving the certificate)
-                (byte) 0x00, // P1
-                (byte) 0x00, // P2
-                (byte) certificate.length // Lc
-            }, certificate);
+            CommandAPDU saveCertificateCommand = new CommandAPDU(0x00, 0x0E, 0x00, 0x00, certificate);
 
             ResponseAPDU response = channel.transmit(saveCertificateCommand);
             if (response.getSW() != 0x9000) {

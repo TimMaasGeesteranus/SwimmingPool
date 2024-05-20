@@ -221,21 +221,23 @@ public class Card extends Applet {
         this.expirationDay = 30;
     }
 
-    private void addDaysToExpiration(int days) {
+    private void addDaysToExpiration(short days) {
         final short[] daysInMonth = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-        short daysToAdd = (short) days;
-        while (daysToAdd > 0) {
-            short daysInCurrentMonth = daysInMonth[expirationMonth - 1];
+
+        while (days > 0) {
+            short daysInCurrentMonth = daysInMonth[(short) (expirationMonth - 1)];
             if (expirationMonth == 2 && isLeapYear(expirationYear)) {
-                daysInCurrentMonth++;
+                daysInCurrentMonth++; // Adjust for leap year
             }
-            if (expirationDay + daysToAdd <= daysInCurrentMonth) {
-                expirationDay += daysToAdd;
-                daysToAdd = 0;
+
+            if ((short) (expirationDay + days) <= daysInCurrentMonth) {
+                expirationDay += days;
+                days = 0;
             } else {
-                daysToAdd -= (daysInCurrentMonth - expirationDay + 1);
+                days -= (short) (daysInCurrentMonth - expirationDay + 1);
                 expirationDay = 1;
                 expirationMonth++;
+
                 if (expirationMonth > 12) {
                     expirationMonth = 1;
                     expirationYear++;
