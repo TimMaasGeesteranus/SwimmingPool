@@ -8,6 +8,21 @@ public class Card_Managment {
         // Initialization code here
     }
 
+    public static String requestSeasonTicketCertificate(String cardId){
+        // TODO: return something meaningful
+        return "wow such certificate";
+    }
+
+    public static String generateSeasonTicketCertificate(String cardId){
+        // TODO: return something meaningful
+        return "wow such certificate";
+    }   
+
+    public static boolean sendSeasonTicketCertificate(String cardId, String newCertificate){
+        // TODO: return something meaningful
+        return true;
+    }   
+
     public void initializeCard() {
         // Code to initialize a new card with a unique ID and symmetric key
     }

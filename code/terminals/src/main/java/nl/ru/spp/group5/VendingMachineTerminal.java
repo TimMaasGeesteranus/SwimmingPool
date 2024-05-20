@@ -1,13 +1,28 @@
 package nl.ru.spp.group5;
 
 import java.util.Scanner;
+
+import javax.smartcardio.CardChannel;
+import javax.smartcardio.CardException;
+
 import nl.ru.spp.group5.Helpers.Card_Managment;
 import nl.ru.spp.group5.Helpers.Utils;
 
-public class VendingMachineTerminal {
+public class VendingMachineTerminal extends Terminal{
     private static final String employeeCode = "123456";
     
     public static void main(String[] args) {
+        System.out.println("This is the vending machine terminal");
+        VendingMachineTerminal vendingMachineTerminal = new VendingMachineTerminal();
+        vendingMachineTerminal.waitForCard();
+    }
+
+    public VendingMachineTerminal(){
+
+    }
+
+    @Override
+    public void handleCard(CardChannel channel) throws CardException{
         Scanner scanner = new Scanner(System.in);
         Utils.clearScreen();
 
@@ -98,6 +113,7 @@ public class VendingMachineTerminal {
         int currentEntries = Card_Managment.checkEntries(cardId);
         if (currentEntries != 0) {
             System.out.println("Card already has entries. Cannot issue a new 10-entry ticket.");
+            Utils.clearScreen();
             return;
         }
 
