@@ -5,11 +5,11 @@ import java.util.Scanner;
 import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
 
+import nl.ru.spp.group5.Helpers.Backend;
 import nl.ru.spp.group5.Helpers.Card_Managment;
 import nl.ru.spp.group5.Helpers.Utils;
 
-public class VendingMachineTerminal extends Terminal{
-    private static final String employeeCode = "123456";
+public class VendingMachineTerminal extends Terminal {
     
     public static void main(String[] args) {
         System.out.println("This is the vending machine terminal");
@@ -17,12 +17,12 @@ public class VendingMachineTerminal extends Terminal{
         vendingMachineTerminal.waitForCard();
     }
 
-    public VendingMachineTerminal(){
+    public VendingMachineTerminal() {
 
     }
 
     @Override
-    public void handleCard(CardChannel channel) throws CardException{
+    public void handleCard(CardChannel channel) throws CardException {
         Scanner scanner = new Scanner(System.in);
         Utils.clearScreen();
 
@@ -63,6 +63,11 @@ public class VendingMachineTerminal extends Terminal{
         System.out.println("Requesting season ticket...");
         String cardId = "0"; // Example card ID, replace with actual logic to get card ID
         
+        if (Backend.isCardBlocked(cardId)) {
+            System.out.println("This card is blocked. Returning to the menu.");
+            return;
+        }
+
         boolean authenticated = Card_Managment.mutualAuthenticate(cardId);
         if (!authenticated) {
             System.out.println("Authentication failed. Returning to the menu.");
@@ -103,6 +108,11 @@ public class VendingMachineTerminal extends Terminal{
 
         System.out.println("Requesting 10-entry ticket...");
         String cardId = "0"; // Example card ID, replace with actual logic to get card ID
+
+        if (Backend.isCardBlocked(cardId)) {
+            System.out.println("This card is blocked. Returning to the menu.");
+            return;
+        }
 
         boolean authenticated = Card_Managment.mutualAuthenticate(cardId);
         if (!authenticated) {
@@ -175,10 +185,10 @@ public class VendingMachineTerminal extends Terminal{
         Scanner scanner = new Scanner(System.in);
 
         Utils.clearScreen();
-        System.out.println("Please enter the secret employee code: (123456)");
+        System.out.println("Please enter the secret employee code: ");
         String employeeCodeInput = scanner.nextLine();
 
-        if (!employeeCodeInput.equals(employeeCode)) {
+        if (!employeeCodeInput.equals(Backend.getEmployeeCode())) {
             System.out.println("Wrong code. Returning to the menu. \n");
             return;
         }
@@ -187,6 +197,7 @@ public class VendingMachineTerminal extends Terminal{
         System.out.println("Please enter the ID of the card you want to block:");
         String cardIDInput = scanner.nextLine();
 
+        Backend.blockCard(cardIDInput);
         Card_Managment.blockCard(cardIDInput);
 
         Utils.clearScreen();
@@ -198,8 +209,12 @@ public class VendingMachineTerminal extends Terminal{
     }
 
     public static boolean buyTenEntryTicket(String cardID) {
-        int currentEntries = getNumberOfEntries(cardID);
+        if (Backend.isCardBlocked(cardID)) {
+            System.out.println("This card is blocked. Returning to the menu.");
+            return false;
+        }
 
+        int currentEntries = getNumberOfEntries(cardID);
         if (currentEntries > 999) {
             return false;
         }
@@ -210,10 +225,16 @@ public class VendingMachineTerminal extends Terminal{
     }
 
     private static int getNumberOfEntries(String cardID) {
-        return 0;
+        // Example implementation, replace with actual logic to get the current number of entries
+        return Card_Managment.checkEntries(cardID);
     }
 
     private static void updateEntryCount(String cardID, int newEntries) {
         // Implement this method
+        if (Backend.isCardBlocked(cardID)) {
+            System.out.println("This card is blocked. Cannot update entries.");
+            return;
+        }
+        Card_Managment.updateEntryCount(cardID, newEntries);
     }
 }
