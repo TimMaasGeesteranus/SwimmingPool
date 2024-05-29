@@ -18,7 +18,6 @@ public class VendingMachineTerminal extends Terminal {
     }
 
     public VendingMachineTerminal() {
-
     }
 
     @Override

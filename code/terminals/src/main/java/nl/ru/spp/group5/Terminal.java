@@ -5,11 +5,14 @@ import java.util.List;
 import java.util.Scanner;
 import javax.smartcardio.*;
 
+import nl.ru.spp.group5.Helpers.Utils;
+
+
 
 public abstract class Terminal{
 
     Terminal(){
-
+        Utils.clearScreen();
     }
 
     public void waitForCard() {
@@ -18,7 +21,6 @@ public abstract class Terminal{
         CardTerminal terminal = null;
 
         try {
-            System.out.println(factory.terminals().list());
             terminal = factory.terminals().list().get(0);
         } catch (Exception e) {
             System.err.println("Error getting card terminal: " + e.getMessage());
@@ -26,6 +28,7 @@ public abstract class Terminal{
         }
 
         while (true) {
+            Utils.clearScreen();
             System.out.println("Waiting for card");
             try {
                 if (terminal.isCardPresent()) {
