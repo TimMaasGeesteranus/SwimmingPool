@@ -1,5 +1,6 @@
 package nl.ru.spp.group5.Helpers;
 
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -24,4 +25,18 @@ public class Utils {
         System.out.print("\033[H\033[2J");  
         System.out.flush();  
     }  
+
+    public static byte[] stringToBytes(String input){
+        return input.getBytes();
+    }
+
+    public static String bytesToString(byte[] input){
+        return new String(input);
+    }
+
+    public static byte[] intToBytes(int input){
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        buffer.putInt(input);
+        return buffer.array();
+    }
 }

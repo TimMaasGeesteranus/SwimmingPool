@@ -1,6 +1,7 @@
 package nl.ru.spp.group5;
 
 import javacard.framework.*;
+import javacard.security.*;
 
 public class Card extends Applet {
 
@@ -20,6 +21,16 @@ public class Card extends Applet {
     private static final byte INS_ISSUE_CARD = (byte) 0x0D;
     private static final byte INS_SAVE_CERTIFICATE = (byte) 0x0E;
 
+
+    //ISSUE CARD
+    private final Init init;
+
+    private static final byte INS_ISSUE_GENERATEKEYS = (byte) 0x0F;
+  
+    protected RSAPrivateKey privKeyCard;
+    protected RSAPublicKey pubKeyCard;
+    protected byte[] cardID;
+
     private short expirationYear;
     private byte expirationMonth;
     private byte expirationDay;
@@ -38,6 +49,9 @@ public class Card extends Applet {
         seasonTicketCertificate = new byte[64]; // Example size
         cardKey = new byte[16]; // Example size for key
         kCard = new byte[16]; // Example size for key
+        cardID = new byte[4];
+
+        init = new Init(this);
         register();
     }
 
@@ -101,6 +115,9 @@ public class Card extends Applet {
                 break;
             case INS_SAVE_CERTIFICATE:
                 saveCertificate(apdu);
+                break;
+            case INS_ISSUE_GENERATEKEYS:
+                init.generateKeys(apdu);
                 break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
