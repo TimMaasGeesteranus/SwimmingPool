@@ -3,6 +3,7 @@ package nl.ru.spp.group5.Helpers;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 public class Utils {
@@ -38,5 +39,14 @@ public class Utils {
         ByteBuffer buffer = ByteBuffer.allocate(4);
         buffer.putInt(input);
         return buffer.array();
+    }
+
+    public static byte[] getExpirationDate(int yearsFromNow){
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, yearsFromNow);
+        Date expirationDate = calendar.getTime();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        return dateFormat.format(expirationDate).getBytes();
     }
 }

@@ -30,6 +30,7 @@ public class Card extends Applet {
     protected RSAPrivateKey privKeyCard;
     protected RSAPublicKey pubKeyCard;
     protected byte[] cardID;
+    protected byte[] cardExpirationDate;
 
     private short expirationYear;
     private byte expirationMonth;
@@ -50,6 +51,7 @@ public class Card extends Applet {
         cardKey = new byte[16]; // Example size for key
         kCard = new byte[16]; // Example size for key
         cardID = new byte[4];
+        cardExpirationDate = new byte[10];
 
         init = new Init(this);
         register();

@@ -6,14 +6,20 @@ import javacard.framework.*;
 public class Init {
     private final Card applet;
 
+    private short cardIDLength; // TODO replace
+    private short cardExpirationDateLength; // TODO replace
+
     Init(Card applet) {
         this.applet = applet;
+        cardIDLength = (short) 4;
+        cardExpirationDateLength = (short) 10;
     }
 
     void generateKeys(APDU apdu){
-        // Get cardID from apdu and save onto card
+        // Get cardID and expirationDate from apdu and save onto card
         byte[] buffer = apdu.getBuffer();
-        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, applet.cardID, (short) 0, (short) applet.cardID.length );
+        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, applet.cardID, (short) 0, (short) cardIDLength );
+        Util.arrayCopy(buffer, (short) (ISO7816.OFFSET_CDATA + cardIDLength), applet.cardExpirationDate, (short) 0, (short) cardExpirationDateLength);
 
         // Generate keys for the card
         KeyPair keyPair = new KeyPair(KeyPair.ALG_RSA, KeyBuilder.LENGTH_RSA_2048);

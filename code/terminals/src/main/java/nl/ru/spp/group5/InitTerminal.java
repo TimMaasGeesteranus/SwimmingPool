@@ -34,18 +34,23 @@ public class InitTerminal extends Terminal{
             return;
         }
 
-        int cardID = 12345; // TODO set new cardID everytime
+        System.out.println("Issueing card. This might take a while...");
 
+        // Generate cardID and cardExpirationDate
+        byte[] cardID = Utils.intToBytes(12345);
+        byte[] cardExpirationDate = Utils.getExpirationDate(10);
 
-        byte[] pubKeyCard = generateKeysOnCard(channel, cardID);
+        byte[] pubKeyCard = generateKeysOnCard(channel, cardID, cardExpirationDate);
+        System.out.println("done!");
     }
 
-    private byte[] generateKeysOnCard(CardChannel channel, int cardID) throws CardException{
-        System.out.println("generateKeysOnCard");
-
-        // Sending CardID to card
-        byte[] data = Utils.intToBytes(cardID);
-        System.out.println(data.length);
+    private byte[] generateKeysOnCard(CardChannel channel, byte[] cardID, byte[] cardExpirationDate) throws CardException{
+        // Making data object from cardID and cardExpirationDate
+        byte[] data = new byte[cardID.length + cardExpirationDate.length];
+        System.arraycopy(cardID, 0, data, 0, cardID.length);
+        System.arraycopy(cardExpirationDate, 0, data, cardID.length, cardExpirationDate.length);
+        
+        // Sending data to card
         CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x0F, 0x00, 0x00, data);
 
         // Verifying response
