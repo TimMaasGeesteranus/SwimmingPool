@@ -11,9 +11,10 @@ public class Init {
     }
 
     void generateKeys(APDU apdu){
-        // Get cardID from apdu and save onto card
+        // Get cardID and expirationDate from apdu and save onto card
         byte[] buffer = apdu.getBuffer();
-        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, applet.cardID, (short) 0, (short) applet.cardID.length );
+        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, applet.cardID, (short) 0, (short) Consts.CARD_ID_LENGTH );
+        Util.arrayCopy(buffer, (short) (ISO7816.OFFSET_CDATA + Consts.CARD_ID_LENGTH), applet.cardExpirationDate, (short) 0, (short) Consts.CARD_EXP_DATE_LENGTH);
 
         // Generate keys for the card
         KeyPair keyPair = new KeyPair(KeyPair.ALG_RSA, KeyBuilder.LENGTH_RSA_2048);

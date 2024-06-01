@@ -13,7 +13,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Arrays;
 
-import nl.ru.spp.group5.Helpers.Utils;
+import static nl.ru.spp.group5.Helpers.Utils.*;
 
 public class InitTerminal extends Terminal{
     
@@ -34,26 +34,31 @@ public class InitTerminal extends Terminal{
             return;
         }
 
-        int cardID = 12345; // TODO set new cardID everytime
+        System.out.println("Issueing card. This might take a while...");
 
+        // Generate cardID and cardExpirationDate
+        byte[] cardID = generateCardID();
 
-        byte[] pubKeyCard = generateKeysOnCard(channel, cardID);
+        byte[] cardExpirationDate = getExpirationDate(10);
+        byte[] pubKeyCard = generateKeysOnCard(channel, cardID, cardExpirationDate);
+        System.out.println("done!");
     }
 
-    private byte[] generateKeysOnCard(CardChannel channel, int cardID) throws CardException{
-        System.out.println("generateKeysOnCard");
-
-        // Sending CardID to card
-        byte[] data = Utils.intToBytes(cardID);
-        System.out.println(data.length);
+    private byte[] generateKeysOnCard(CardChannel channel, byte[] cardID, byte[] cardExpirationDate) throws CardException{
+        // Making data object from cardID and cardExpirationDate
+        byte[] data = new byte[CARD_ID_LENGTH + CARD_EXP_DATE_LENGTH];
+        System.arraycopy(cardID, 0, data, 0, CARD_ID_LENGTH);
+        System.arraycopy(cardExpirationDate, 0, data, CARD_ID_LENGTH, CARD_EXP_DATE_LENGTH);
+        
+        // Sending data to card
         CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x0F, 0x00, 0x00, data);
 
         // Verifying response
-        ResponseAPDU response = channel.transmit(apdu);
-        if (response.getSW() != 0x9000){
-            System.out.println("something went wrong");
-            System.exit(1);
-        }
+         ResponseAPDU response = channel.transmit(apdu);
+         if (response.getSW() != 0x9000){
+             System.out.println("something went wrong");
+             System.exit(1);
+         }
 
         // Returning public key from card
         System.out.println(response.getData());
