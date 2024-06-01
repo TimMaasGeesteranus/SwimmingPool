@@ -20,7 +20,8 @@ public class Utils {
         random.nextBytes(nonce);
         return nonce;
     }
-
+    
+    // TODO: actually generate cardID
     public static byte[] generateCardID(){
         byte[] cardID = new byte[CARD_ID_LENGTH];
         Arrays.fill(cardID, (byte) 0);

@@ -28,12 +28,6 @@ public class InitTerminal extends Terminal{
 
     @Override
     public void handleCard(CardChannel channel) throws CardException{
-        // exit if card was already issued
-        if(isIssued()){
-            System.out.println("This card was already issued");
-            return;
-        }
-
         System.out.println("Issueing card. This might take a while...");
 
         // Generate cardID and cardExpirationDate
@@ -55,18 +49,17 @@ public class InitTerminal extends Terminal{
 
         // Verifying response
          ResponseAPDU response = channel.transmit(apdu);
-         if (response.getSW() != 0x9000){
-             System.out.println("something went wrong");
-             System.exit(1);
+         if (response.getSW() == 27014){
+            System.out.println("Card is already issued and cannot be issued again.");
+            System.exit(1);
+         }
+         else if (response.getSW() != 0x9000){
+            System.out.println("something went wrong");
+            System.exit(1);
          }
 
         // Returning public key from card
         System.out.println(response.getData());
         return response.getData();
-    }
-
-    private boolean isIssued(){
-        // TODO check if card was already isIssued
-        return false;
     }
 }
