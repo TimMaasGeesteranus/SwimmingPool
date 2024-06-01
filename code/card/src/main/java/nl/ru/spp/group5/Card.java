@@ -47,11 +47,11 @@ public class Card extends Applet {
         data = new byte[256];
         entryCounter = 0;
         isBlocked = false;
-        seasonTicketCertificate = new byte[64]; // Example size
-        cardKey = new byte[16]; // Example size for key
-        kCard = new byte[16]; // Example size for key
-        cardID = new byte[4];
-        cardExpirationDate = new byte[10];
+        seasonTicketCertificate = new byte[Consts.KEY_LENGTH];
+        cardKey = new byte[Consts.KEY_LENGTH]; 
+        kCard = new byte[Consts.KEY_LENGTH]; 
+        cardID = new byte[Consts.CARD_ID_LENGTH];
+        cardExpirationDate = new byte[Consts.CARD_EXP_DATE_LENGTH];
 
         init = new Init(this);
         register();
