@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Random;
 
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -39,10 +40,16 @@ public class Utils {
         return nonce;
     }
     
-    // TODO: actually generate cardID
+    // TODO: maybe not do this random bc duplicates?
     public static byte[] generateCardID(){
         byte[] cardID = new byte[CARD_ID_LENGTH];
-        Arrays.fill(cardID, (byte) 0);
+        Random random = new Random();
+
+        // Fill the byte array with random numbers
+        for (int i = 0; i < CARD_ID_LENGTH; i++) {
+            cardID[i] = (byte) (random.nextInt(10) + 48);     
+        }
+        
         return cardID;
     }
 
