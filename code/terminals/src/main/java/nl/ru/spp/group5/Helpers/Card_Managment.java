@@ -1,21 +1,33 @@
 package nl.ru.spp.group5.Helpers;
 
 import javax.smartcardio.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.security.*;
+import java.util.Base64;
+import java.util.Date;
 
 public class Card_Managment {
-    private static Map<String, Integer> cardEntries = new HashMap<>();
-    private static Map<String, Boolean> cardValidity = new HashMap<>();
+
+    // Dummy private key for signing the certificate
+    private static final PrivateKey PRIVATE_KEY = generatePrivateKey();
+
+    private static PrivateKey generatePrivateKey() {
+        try {
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            keyPairGenerator.initialize(2048);
+            KeyPair keyPair = keyPairGenerator.generateKeyPair();
+            return keyPair.getPrivate();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Failed to generate private key", e);
+        }
+    }
 
     public Card_Managment() {
         // Initialization code here
     }
 
     public void initializeCard(String cardId, byte[] cardKey) {
-        // Example implementation to initialize a card with a unique ID and symmetric key
-        cardEntries.put(cardId, 0);
-        cardValidity.put(cardId, true);
+        Backend.setCardEntries(cardId, 0);
+        Backend.setCardValidity(cardId, true);
     }
 
     public static boolean issueCard(String cardId, byte[] kCard, byte[] cardKey) {
@@ -37,8 +49,8 @@ public class Card_Managment {
                 throw new CardException("Failed to issue the card. Response: " + Integer.toHexString(response.getSW()));
             }
 
-            cardEntries.put(cardId, 0); // Initialize entry count for the card
-            cardValidity.put(cardId, true); // Mark the card as valid
+            Backend.setCardEntries(cardId, 0); // Initialize entry count for the card
+            Backend.setCardValidity(cardId, true); // Mark the card as valid
 
             card.disconnect(false);
             return true;
@@ -49,16 +61,37 @@ public class Card_Managment {
     }
 
     public void rechargeCard(String cardId, String type) {
-        if (!cardValidity.getOrDefault(cardId, false)) {
+        if (!Backend.isCardValid(cardId)) {
             System.out.println("Card is not valid.");
             return;
         }
+
+        if (!mutualAuthenticate(cardId)) {
+            System.out.println("Authentication failed.");
+            return;
+        }
+
         if (type.equals("season")) {
-            // Example logic to recharge a season ticket
-            System.out.println("Recharging season ticket for card: " + cardId);
+            String newCertificate = generateSeasonTicketCertificate(cardId);
+            boolean success = sendSeasonTicketCertificate(cardId, newCertificate);
+            if (success) {
+                System.out.println("Season ticket recharged successfully. New expiry date: " + newCertificate);
+            } else {
+                System.out.println("Failed to recharge the season ticket.");
+            }
         } else if (type.equals("entry")) {
-            // Example logic to recharge a 10-entry ticket
-            System.out.println("Recharging 10-entry ticket for card: " + cardId);
+            int currentEntries = Backend.getCardEntries(cardId);
+            int newEntries = currentEntries + 10;
+            if (newEntries > 999) {
+                System.out.println("Cannot recharge: entry limit exceeded.");
+                return;
+            }
+            boolean success = setEntries(cardId, newEntries);
+            if (success) {
+                System.out.println("10-entry ticket recharged successfully.");
+            } else {
+                System.out.println("Failed to recharge the 10-entry ticket.");
+            }
         } else {
             System.out.println("Unknown card type.");
         }
@@ -85,7 +118,7 @@ public class Card_Managment {
                 throw new CardException("Failed to block the card. Response: " + Integer.toHexString(response.getSW()));
             }
 
-            cardValidity.put(cardId, false); // Mark the card as invalid
+            Backend.setCardValidity(cardId, false); // Mark the card as invalid
 
             card.disconnect(false);
         } catch (Exception e) {
@@ -94,15 +127,36 @@ public class Card_Managment {
     }
 
     public void unblockCard(String cardId) {
-        cardValidity.put(cardId, true); // Mark the card as valid
+        Backend.setCardValidity(cardId, true); // Mark the card as valid
     }
 
     public boolean checkCardValidity(String cardId) {
-        return cardValidity.getOrDefault(cardId, false);
+        return Backend.isCardValid(cardId);
     }
 
-    public void updateCardEntries(String cardId, int entries) {
-        cardEntries.put(cardId, entries); // Update the number of entries on the card
+    public static boolean updateEntryCount(String cardId, int newEntries) {
+        try {
+            TerminalFactory factory = TerminalFactory.getDefault();
+            CardTerminals terminals = factory.terminals();
+            CardTerminal terminal = terminals.list().get(0);
+            Card card = terminal.connect("*");
+            CardChannel channel = card.getBasicChannel();
+
+            CommandAPDU updateEntriesCommand = new CommandAPDU(0x00, 0x0C, 0x00, 0x00, new byte[]{(byte) newEntries});
+
+            ResponseAPDU response = channel.transmit(updateEntriesCommand);
+            if (response.getSW() != 0x9000) {
+                throw new CardException("Failed to update entries. Response: " + Integer.toHexString(response.getSW()));
+            }
+
+            Backend.setCardEntries(cardId, newEntries);
+
+            card.disconnect(false);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static boolean mutualAuthenticate(String cardId) {
@@ -111,7 +165,7 @@ public class Card_Managment {
     }
 
     public static int checkEntries(String cardId) {
-        return cardEntries.getOrDefault(cardId, 0);
+        return Backend.getCardEntries(cardId);
     }
 
     public static boolean setEntries(String cardId, int entries) {
@@ -129,7 +183,7 @@ public class Card_Managment {
                 throw new CardException("Failed to set entries. Response: " + Integer.toHexString(response.getSW()));
             }
 
-            cardEntries.put(cardId, entries);
+            Backend.setCardEntries(cardId, entries);
 
             card.disconnect(false);
             return true;
@@ -193,8 +247,17 @@ public class Card_Managment {
     }
 
     public static String generateSeasonTicketCertificate(String cardId) {
-        // Implement logic to generate a new season ticket certificate
-        return "2025-12-31"; // Example return value
+        try {
+            String data = "CardID:" + cardId + ";ExpiryDate:2025-12-31";
+            Signature signature = Signature.getInstance("SHA256withRSA");
+            signature.initSign(PRIVATE_KEY);
+            signature.update(data.getBytes());
+            byte[] signedData = signature.sign();
+            return data + ";Signature:" + Base64.getEncoder().encodeToString(signedData);
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public static boolean sendSeasonTicketCertificate(String cardId, String certificate) {
@@ -212,31 +275,6 @@ public class Card_Managment {
             if (response.getSW() != 0x9000) {
                 throw new CardException("Failed to send the season ticket certificate. Response: " + Integer.toHexString(response.getSW()));
             }
-
-            card.disconnect(false);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public static boolean updateEntryCount(String cardId, int newEntries) {
-        try {
-            TerminalFactory factory = TerminalFactory.getDefault();
-            CardTerminals terminals = factory.terminals();
-            CardTerminal terminal = terminals.list().get(0);
-            Card card = terminal.connect("*");
-            CardChannel channel = card.getBasicChannel();
-
-            CommandAPDU updateEntriesCommand = new CommandAPDU(0x00, 0x0C, 0x00, 0x00, new byte[]{(byte) newEntries});
-
-            ResponseAPDU response = channel.transmit(updateEntriesCommand);
-            if (response.getSW() != 0x9000) {
-                throw new CardException("Failed to update entries. Response: " + Integer.toHexString(response.getSW()));
-            }
-
-            cardEntries.put(cardId, newEntries);
 
             card.disconnect(false);
             return true;
