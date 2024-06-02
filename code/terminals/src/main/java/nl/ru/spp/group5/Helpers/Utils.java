@@ -1,11 +1,26 @@
 package nl.ru.spp.group5.Helpers;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
 
 public class Utils {
     public final static int CARD_ID_LENGTH = 16;
@@ -60,5 +75,39 @@ public class Utils {
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         return dateFormat.format(expirationDate).getBytes();
+    }
+
+    public static byte[] generateCert(byte[] data){
+
+
+        return new byte[KEY_LENGTH];
+    }
+
+    public static RSAPublicKey readPubKey() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        File file = new File("terminal_pubkey.pem");
+
+        try(PemReader pemReader = new PemReader(new FileReader(file));){
+            PemObject pemObject = pemReader.readPemObject();
+            byte[] pemContent = pemObject.getContent();
+            pemReader.close();
+
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(pemContent);
+            return (RSAPublicKey) keyFactory.generatePublic(keySpec);
+        }
+    }
+
+    public static RSAPrivateKey readPrivKey() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        File file = new File("terminal_privkey.pem");
+
+        try(PemReader pemReader = new PemReader(new FileReader(file));){
+            PemObject pemObject = pemReader.readPemObject();
+            byte[] pemContent = pemObject.getContent();
+            pemReader.close();
+
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pemContent);
+            return (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
+        }
     }
 }

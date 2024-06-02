@@ -1,5 +1,9 @@
 package nl.ru.spp.group5;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Scanner;
 
 import javax.smartcardio.CardChannel;
@@ -11,13 +15,13 @@ import nl.ru.spp.group5.Helpers.Utils;
 
 public class VendingMachineTerminal extends Terminal {
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException{
         System.out.println("This is the vending machine terminal");
         VendingMachineTerminal vendingMachineTerminal = new VendingMachineTerminal();
         vendingMachineTerminal.waitForCard();
     }
 
-    public VendingMachineTerminal() {
+    public VendingMachineTerminal() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException{
     }
 
     @Override
