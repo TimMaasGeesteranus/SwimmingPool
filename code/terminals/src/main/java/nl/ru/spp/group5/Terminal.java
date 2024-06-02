@@ -16,13 +16,13 @@ import javax.smartcardio.*;
 import nl.ru.spp.group5.Helpers.Utils;
 
 public abstract class Terminal{
-    private final RSAPublicKey pubKey;
-    private final RSAPrivateKey privKey;
+    private final RSAPublicKey TERMINAL_PUB_KEY;
+    protected final RSAPrivateKey TERMINAL_PRIV_KEY;
 
     Terminal() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         // Read private and public keys from files
-        this.pubKey = readPubKey();
-        this.privKey = readPrivKey();
+        this.TERMINAL_PUB_KEY = readPubKey();
+        this.TERMINAL_PRIV_KEY = readPrivKey();
     }
 
     public void waitForCard() {
@@ -58,7 +58,7 @@ public abstract class Terminal{
         }
     }
 
-    abstract public void handleCard(CardChannel channel) throws CardException;
+    abstract public void handleCard(CardChannel channel) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException;
 
     private boolean appletSelectedSuccessfully(CardChannel channel) throws CardException{
         byte[] apduBytes = {

@@ -5,10 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
@@ -77,10 +80,12 @@ public class Utils {
         return dateFormat.format(expirationDate).getBytes();
     }
 
-    public static byte[] generateCert(byte[] data){
+    public static byte[] sign(byte[] data, RSAPrivateKey key) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException{
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initSign(key);
+        signature.update(data);
 
-
-        return new byte[KEY_LENGTH];
+        return signature.sign();
     }
 
     public static RSAPublicKey readPubKey() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
