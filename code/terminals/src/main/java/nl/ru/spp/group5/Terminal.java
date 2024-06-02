@@ -58,7 +58,7 @@ public abstract class Terminal{
         }
     }
 
-    abstract public void handleCard(CardChannel channel) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException;
+    abstract public void handleCard(CardChannel channel) throws InterruptedException, SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException;
 
     private boolean appletSelectedSuccessfully(CardChannel channel) throws CardException{
         byte[] apduBytes = {

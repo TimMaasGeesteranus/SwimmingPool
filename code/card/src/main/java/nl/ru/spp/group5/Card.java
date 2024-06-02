@@ -25,11 +25,14 @@ public class Card extends Applet {
     //ISSUE CARD
     private final Init init;
     private static final byte INS_ISSUE_GENERATEKEYS = (byte) 0x0F;
+    private static final byte INS_ISSUE_SAVE_CERT_FIRST_HALF = (byte) 0x22;
+    private static final byte INS_ISSUE_SAVE_CERT_SECOND_HALF = (byte) 0x24;
     protected RSAPrivateKey privKeyCard;
     protected RSAPublicKey pubKeyCard;
     protected byte[] cardID;
     protected byte[] cardExpirationDate;
     protected boolean isIssued;
+    protected byte[] cardCertificate;
 
     private short expirationYear;
     private byte expirationMonth;
@@ -51,6 +54,7 @@ public class Card extends Applet {
         kCard = new byte[Consts.KEY_LENGTH]; 
         cardID = new byte[Consts.CARD_ID_LENGTH];
         cardExpirationDate = new byte[Consts.CARD_EXP_DATE_LENGTH];
+        cardCertificate = new byte[Consts.CERT_LENGTH];
         isIssued = false;
 
         init = new Init(this);
@@ -120,6 +124,12 @@ public class Card extends Applet {
                 break;
             case INS_ISSUE_GENERATEKEYS:
                 init.generateKeys(apdu);
+                break;
+            case INS_ISSUE_SAVE_CERT_FIRST_HALF:
+                init.saveCertFirstHalf(apdu);
+                break;
+            case INS_ISSUE_SAVE_CERT_SECOND_HALF:
+                init.saveCertSecondHalf(apdu);
                 break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
