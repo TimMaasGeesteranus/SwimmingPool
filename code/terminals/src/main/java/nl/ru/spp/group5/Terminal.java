@@ -1,18 +1,28 @@
 package nl.ru.spp.group5;
 
-import java.security.Security;
+import static nl.ru.spp.group5.Helpers.Utils.readPrivKey;
+import static nl.ru.spp.group5.Helpers.Utils.readPubKey;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.security.*;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.List;
 import java.util.Scanner;
 import javax.smartcardio.*;
 
 import nl.ru.spp.group5.Helpers.Utils;
 
-
-
 public abstract class Terminal{
+    private final RSAPublicKey pubKey;
+    private final RSAPrivateKey privKey;
 
-    Terminal(){
-        Utils.clearScreen();
+    Terminal() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        // Read private and public keys from files
+        this.pubKey = readPubKey();
+        this.privKey = readPrivKey();
     }
 
     public void waitForCard() {

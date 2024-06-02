@@ -1,6 +1,9 @@
 package nl.ru.spp.group5;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.logging.*;
 import javax.smartcardio.*;
 
@@ -19,13 +22,13 @@ public class AccessGateTerminal extends Terminal {
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         logger.info("Starting AccessGateTerminal...");
         AccessGateTerminal accessGateTerminal = new AccessGateTerminal();
         accessGateTerminal.waitForCard();
     }
 
-    public AccessGateTerminal() {
+    public AccessGateTerminal() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         logger.info("AccessGateTerminal initialized.");
     }
 

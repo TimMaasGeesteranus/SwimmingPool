@@ -24,13 +24,12 @@ public class Card extends Applet {
 
     //ISSUE CARD
     private final Init init;
-
     private static final byte INS_ISSUE_GENERATEKEYS = (byte) 0x0F;
-  
     protected RSAPrivateKey privKeyCard;
     protected RSAPublicKey pubKeyCard;
     protected byte[] cardID;
     protected byte[] cardExpirationDate;
+    protected boolean isIssued;
 
     private short expirationYear;
     private byte expirationMonth;
@@ -52,6 +51,7 @@ public class Card extends Applet {
         kCard = new byte[Consts.KEY_LENGTH]; 
         cardID = new byte[Consts.CARD_ID_LENGTH];
         cardExpirationDate = new byte[Consts.CARD_EXP_DATE_LENGTH];
+        isIssued = false;
 
         init = new Init(this);
         register();

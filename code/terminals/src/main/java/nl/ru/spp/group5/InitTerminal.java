@@ -7,9 +7,14 @@ import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Arrays;
 
@@ -17,31 +22,32 @@ import static nl.ru.spp.group5.Helpers.Utils.*;
 
 public class InitTerminal extends Terminal{
     
-    private InitTerminal(){
+    private InitTerminal() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException{
         System.out.println("This is the initial terminal");
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException{
         InitTerminal initTerminal = new InitTerminal();
         initTerminal.waitForCard();  
     }
 
     @Override
     public void handleCard(CardChannel channel) throws CardException{
-        // exit if card was already issued
-        if(isIssued()){
-            System.out.println("This card was already issued");
-            return;
-        }
-
         System.out.println("Issueing card. This might take a while...");
 
         // Generate cardID and cardExpirationDate
         byte[] cardID = generateCardID();
-
         byte[] cardExpirationDate = getExpirationDate(10);
+
+        // Send ID+Expirationdate, generate keys on card and receive pubKeyCard
         byte[] pubKeyCard = generateKeysOnCard(channel, cardID, cardExpirationDate);
-        System.out.println("done!");
+
+        // Generate certificate and send to card
+        byte[] cert = generateCert(cardID, cardExpirationDate, pubKeyCard);
+        sendCertToCard(channel, cert);
+
+        // Print receipt
+        printReceipt(cardID, cardExpirationDate);    
     }
 
     private byte[] generateKeysOnCard(CardChannel channel, byte[] cardID, byte[] cardExpirationDate) throws CardException{
@@ -55,9 +61,13 @@ public class InitTerminal extends Terminal{
 
         // Verifying response
          ResponseAPDU response = channel.transmit(apdu);
-         if (response.getSW() != 0x9000){
-             System.out.println("something went wrong");
-             System.exit(1);
+         if (response.getSW() == 27014){
+            System.out.println("Card is already issued and cannot be issued again.");
+            System.exit(1);
+         }
+         else if (response.getSW() != 0x9000){
+            System.out.println("something went wrong");
+            System.exit(1);
          }
 
         // Returning public key from card
@@ -65,8 +75,24 @@ public class InitTerminal extends Terminal{
         return response.getData();
     }
 
-    private boolean isIssued(){
-        // TODO check if card was already isIssued
-        return false;
+    private byte[] generateCert(byte[] cardID, byte[] cardExpirationDate, byte[] pubKeyCard){
+        byte[] privKeyVending = new byte[KEY_LENGTH];
+
+        // Concatenate cardID, cardExpirationdate and pubKeyCard
+        byte[] dataToSign = new byte[CARD_ID_LENGTH + CARD_EXP_DATE_LENGTH + KEY_LENGTH];
+        System.arraycopy(cardID, 0, dataToSign, 0, CARD_ID_LENGTH);
+        System.arraycopy(cardExpirationDate, 0, dataToSign, CARD_ID_LENGTH, CARD_EXP_DATE_LENGTH);
+        System.arraycopy(pubKeyCard, 0, dataToSign, CARD_ID_LENGTH+CARD_EXP_DATE_LENGTH, KEY_LENGTH);
+
+        
+        return new byte[2];
+    }
+
+    private void sendCertToCard(CardChannel channel, byte[] cert){
+
+    }
+
+    private void printReceipt(byte[] cardID, byte[] cardExpirationDate){
+        System.out.println("RECEIPT");
     }
 }
