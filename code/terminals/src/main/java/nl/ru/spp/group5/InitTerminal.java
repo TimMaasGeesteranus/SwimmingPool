@@ -57,8 +57,9 @@ public class InitTerminal extends Terminal{
         
         // Press enter to continue
         Scanner scanner = new Scanner(System.in);
+        System.out.println("Remove card and press enter");
         String userInput = scanner.nextLine();
-
+        clearScreen();
     }
 
     private byte[] generateKeysOnCard(CardChannel channel, byte[] cardID, byte[] cardExpirationDate) throws CardException{
