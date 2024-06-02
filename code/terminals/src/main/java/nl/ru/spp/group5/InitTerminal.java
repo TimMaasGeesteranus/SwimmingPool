@@ -8,6 +8,8 @@ import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
+import nl.ru.spp.group5.Helpers.Utils;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -19,6 +21,7 @@ import java.security.SignatureException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
+import java.time.LocalDate;
 import java.util.Arrays;
 
 import static nl.ru.spp.group5.Helpers.Utils.*;
@@ -134,6 +137,20 @@ public class InitTerminal extends Terminal{
     }
 
     private void printReceipt(byte[] cardID, byte[] cardExpirationDate){
-        System.out.println("RECEIPT");
+        String cardIDString = new String(cardID);
+        String expirationDateString = new String(cardExpirationDate);
+        String currentDate = Utils.getCurrentDate();
+
+        System.out.println(" _________________________________________");
+        System.out.println("|                 RECEIPT                 |");
+        System.out.println("|-----------------------------------------|");
+        System.out.println("|  Card ID:         " + cardIDString + "      |");
+        System.out.println("|                                         |");
+        System.out.println("|  Date:            " + currentDate + "            |");
+        System.out.println("|  Expiration Date: " + expirationDateString + "            |");
+        System.out.println("|                                         |");
+        System.out.println("|  Have a nice day!                       |");
+        System.out.println("|_________________________________________|");
+
     }
 }
