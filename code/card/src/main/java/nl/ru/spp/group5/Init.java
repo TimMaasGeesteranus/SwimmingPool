@@ -1,6 +1,7 @@
 package nl.ru.spp.group5;
 
 import javacard.security.*;
+
 import javacard.framework.*;
 
 public class Init {
@@ -29,7 +30,34 @@ public class Init {
         // Send public key
         card.pubKeyCard.getModulus(buffer, (short) 0);
         apdu.setOutgoingAndSend((short)0, (short) 256);
+    }
 
+    void saveCertFirstHalf(APDU apdu){
+        if(card.isIssued){
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+        }
+
+        // Get card certificate from apdu and save onto card
+        byte[] buffer = apdu.getBuffer();
+        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.cardCertificate, (short) 0, (short) (Consts.CERT_LENGTH / 2));
+
+        // Send ok message
+        apdu.setOutgoingAndSend((short)0, (short)0);
+    }
+
+    void saveCertSecondHalf(APDU apdu){
+        if(card.isIssued){
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+        }
+
+        // Get card certificate from apdu and save onto card
+        byte[] buffer = apdu.getBuffer();
+        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.cardCertificate, (short) (Consts.CERT_LENGTH / 2), (short) (Consts.CERT_LENGTH / 2));
+
+        // Block initialization
         card.isIssued = true;
+
+        // Send ok message
+        apdu.setOutgoingAndSend((short)0, (short)0);
     }
 }

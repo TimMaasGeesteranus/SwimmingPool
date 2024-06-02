@@ -5,10 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SecureRandom;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
@@ -18,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Random;
 
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -36,10 +40,16 @@ public class Utils {
         return nonce;
     }
     
-    // TODO: actually generate cardID
+    // TODO: maybe not do this random bc duplicates?
     public static byte[] generateCardID(){
         byte[] cardID = new byte[CARD_ID_LENGTH];
-        Arrays.fill(cardID, (byte) 0);
+        Random random = new Random();
+
+        // Fill the byte array with random numbers
+        for (int i = 0; i < CARD_ID_LENGTH; i++) {
+            cardID[i] = (byte) (random.nextInt(10) + 48);     
+        }
+        
         return cardID;
     }
 
@@ -77,10 +87,12 @@ public class Utils {
         return dateFormat.format(expirationDate).getBytes();
     }
 
-    public static byte[] generateCert(byte[] data){
+    public static byte[] sign(byte[] data, RSAPrivateKey key) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException{
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initSign(key);
+        signature.update(data);
 
-
-        return new byte[KEY_LENGTH];
+        return signature.sign();
     }
 
     public static RSAPublicKey readPubKey() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
