@@ -10,9 +10,11 @@ import javax.smartcardio.ResponseAPDU;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.SignatureException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
@@ -32,7 +34,7 @@ public class InitTerminal extends Terminal{
     }
 
     @Override
-    public void handleCard(CardChannel channel) throws CardException{
+    public void handleCard(CardChannel channel) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException{
         System.out.println("Issueing card. This might take a while...");
 
         // Generate cardID and cardExpirationDate
@@ -75,17 +77,15 @@ public class InitTerminal extends Terminal{
         return response.getData();
     }
 
-    private byte[] generateCert(byte[] cardID, byte[] cardExpirationDate, byte[] pubKeyCard){
-        byte[] privKeyVending = new byte[KEY_LENGTH];
-
+    private byte[] generateCert(byte[] cardID, byte[] cardExpirationDate, byte[] pubKeyCard) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException{
         // Concatenate cardID, cardExpirationdate and pubKeyCard
         byte[] dataToSign = new byte[CARD_ID_LENGTH + CARD_EXP_DATE_LENGTH + KEY_LENGTH];
         System.arraycopy(cardID, 0, dataToSign, 0, CARD_ID_LENGTH);
         System.arraycopy(cardExpirationDate, 0, dataToSign, CARD_ID_LENGTH, CARD_EXP_DATE_LENGTH);
         System.arraycopy(pubKeyCard, 0, dataToSign, CARD_ID_LENGTH+CARD_EXP_DATE_LENGTH, KEY_LENGTH);
-
         
-        return new byte[2];
+        // Sign and return
+        return sign(dataToSign, TERMINAL_PRIV_KEY);
     }
 
     private void sendCertToCard(CardChannel channel, byte[] cert){
