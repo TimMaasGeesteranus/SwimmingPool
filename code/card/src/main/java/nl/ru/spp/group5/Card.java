@@ -24,8 +24,8 @@ public class Card extends Applet {
     private final Auth auth;
     private static final byte INS_RETURN_CARD_CERTIFICATE = (byte) 0x08;
     private static final byte INS_GET_CARD_ID = (byte) 0x10;
-
-
+    private static final byte INS_GET_CARD_EXPIRATION_DATE = (byte) 0x11;
+    private static final byte INS_GET_CARD_PUB_KEY = (byte) 0x12;
 
     //ISSUE CARD
     private final Init init;
@@ -138,7 +138,13 @@ public class Card extends Applet {
                 init.saveCertSecondHalf(apdu);
                 break;
             case INS_GET_CARD_ID:
-                auth.getCardID(apdu);
+                auth.returnID(apdu);
+                break;
+            case INS_GET_CARD_EXPIRATION_DATE:
+                auth.returnExpirationDate(apdu);
+                break;
+            case INS_GET_CARD_PUB_KEY:
+                auth.returnPubKey(apdu);
                 break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);

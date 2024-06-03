@@ -9,19 +9,22 @@ import javax.smartcardio.ResponseAPDU;
 
 
 import java.security.Key;
+import java.security.interfaces.RSAPublicKey;
 
 public class SecurityProtocols {
 
     // Method for mutual authentication between card and terminal/vending machine
-    public static boolean mutualAuthentication(CardChannel channel) throws CardException{
-        // Ask card to send its cardID
+    public static boolean mutualAuthentication(CardChannel channel, boolean isGate, RSAPublicKey pubKeyVending) throws CardException{
+        // Ask card to send its data
         byte[] cardID = getCardID(channel);
+        byte[] cardExpirationDate = getCardExpirationDate(channel);
+        byte[] cardPubKey = getCardPubKey(channel);
 
         // Ask card to send its certificate
         byte[] certCard = getCertFromCard(channel);
 
         // Check validity of certificate and if card is not blocked
-        if(!certCardValid(certCard) || Backend.isCardBlocked(new String(cardID))){
+        if(!certCardValid(certCard, pubKeyVending) || Backend.isCardBlocked(new String(cardID))){
             System.out.println("Something went wrong while authenticating");
             return false;
         }
@@ -51,6 +54,35 @@ public class SecurityProtocols {
         return response.getData();
     }
 
+    private static byte[] getCardExpirationDate(CardChannel channel) throws CardException{
+        // Sending ID request
+        CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x11, 0x00, 0x00);
+        ResponseAPDU response = channel.transmit(apdu);
+
+        // Verifying response
+        if (response.getSW() != 0x9000){
+            System.out.println("something went wrong");
+            System.exit(1);
+        }
+
+        return response.getData();
+    }
+
+    private static byte[] getCardPubKey(CardChannel channel) throws CardException{
+        // Sending ID request
+        CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x12, 0x00, 0x00);
+        ResponseAPDU response = channel.transmit(apdu);
+
+        // Verifying response
+        if (response.getSW() != 0x9000){
+            System.out.println("something went wrong");
+            System.exit(1);
+        }
+
+        return response.getData();
+    }
+
+
     private static byte[] getCertFromCard(CardChannel channel) throws CardException{  
         // Sending cert request
         CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x08, 0x00, 0x00);
@@ -65,7 +97,7 @@ public class SecurityProtocols {
         return response.getData();
     }
 
-    private static boolean certCardValid(byte[] certCard){
+    private static boolean certCardValid(byte[] certCard, RSAPublicKey pubKeyVending){        
         return true;
     }
 

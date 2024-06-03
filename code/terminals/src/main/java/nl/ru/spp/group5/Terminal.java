@@ -16,7 +16,7 @@ import javax.smartcardio.*;
 import nl.ru.spp.group5.Helpers.Utils;
 
 public abstract class Terminal{
-    private final RSAPublicKey TERMINAL_PUB_KEY;
+    protected final RSAPublicKey TERMINAL_PUB_KEY;
     protected final RSAPrivateKey TERMINAL_PRIV_KEY;
 
     Terminal() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
