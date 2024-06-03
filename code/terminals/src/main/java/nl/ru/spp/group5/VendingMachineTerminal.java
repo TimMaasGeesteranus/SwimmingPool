@@ -2,7 +2,9 @@ package nl.ru.spp.group5;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Scanner;
 
@@ -26,7 +28,7 @@ public class VendingMachineTerminal extends Terminal {
     }
 
     @Override
-    public void handleCard(CardChannel channel) throws CardException {
+    public void handleCard(CardChannel channel) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
         Scanner scanner = new Scanner(System.in);
         Utils.clearScreen();
 

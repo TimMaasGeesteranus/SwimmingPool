@@ -7,14 +7,19 @@ import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
+import static nl.ru.spp.group5.Helpers.Utils.*;
 
+import java.security.InvalidKeyException;
 import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.interfaces.RSAPublicKey;
 
 public class SecurityProtocols {
 
     // Method for mutual authentication between card and terminal/vending machine
-    public static boolean mutualAuthentication(CardChannel channel, boolean isGate, RSAPublicKey pubKeyVending) throws CardException{
+    public static boolean mutualAuthentication(CardChannel channel, boolean isGate, RSAPublicKey pubKeyVending) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException{
         // Ask card to send its data
         byte[] cardID = getCardID(channel);
         byte[] cardExpirationDate = getCardExpirationDate(channel);
@@ -23,8 +28,14 @@ public class SecurityProtocols {
         // Ask card to send its certificate
         byte[] certCard = getCertFromCard(channel);
 
+        // Concatenate cardID, cardExpirationdate and pubKeyCard so cert can be validated
+        byte[] data = new byte[CARD_ID_LENGTH + CARD_EXP_DATE_LENGTH + KEY_LENGTH];
+        System.arraycopy(cardID, 0, data, 0, CARD_ID_LENGTH);
+        System.arraycopy(cardExpirationDate, 0, data, CARD_ID_LENGTH, CARD_EXP_DATE_LENGTH);
+        System.arraycopy(cardPubKey, 0, data, CARD_ID_LENGTH+CARD_EXP_DATE_LENGTH, KEY_LENGTH);       
+
         // Check validity of certificate and if card is not blocked
-        if(!certCardValid(certCard, pubKeyVending) || Backend.isCardBlocked(new String(cardID))){
+        if(!certCardValid(certCard, data, pubKeyVending) || Backend.isCardBlocked(new String(cardID))){
             System.out.println("Something went wrong while authenticating");
             return false;
         }
@@ -97,8 +108,12 @@ public class SecurityProtocols {
         return response.getData();
     }
 
-    private static boolean certCardValid(byte[] certCard, RSAPublicKey pubKeyVending){        
-        return true;
+    private static boolean certCardValid(byte[] certCard, byte[] data, RSAPublicKey pubKeyVending) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException{        
+        Signature sig = Signature.getInstance("SHA256withRSA");
+        sig.initVerify(pubKeyVending);
+        sig.update(data);
+        
+        return sig.verify(certCard);
     }
 
     private static byte[] sendCertAndNonce1AndGetx1AndNonce2(){
