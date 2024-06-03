@@ -20,4 +20,12 @@ public class Auth {
         // Send certificate
         apdu.setOutgoingAndSend((short)0, (short) Consts.CERT_LENGTH);
     }
+
+    void getCardID(APDU apdu){
+        // Prepare data
+        byte[] buffer = apdu.getBuffer();
+        Util.arrayCopy(card.cardID, (short) 0, buffer, (short) 0, (short) Consts.CARD_ID_LENGTH);
+
+        // Send certificate
+        apdu.setOutgoingAndSend((short)0, (short) Consts.CARD_ID_LENGTH);    }
 }

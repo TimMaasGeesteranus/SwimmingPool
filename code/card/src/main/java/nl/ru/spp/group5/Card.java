@@ -23,6 +23,7 @@ public class Card extends Applet {
     //MUTUAL AUTHENTICATION
     private final Auth auth;
     private static final byte INS_RETURN_CARD_CERTIFICATE = (byte) 0x08;
+    private static final byte INS_GET_CARD_ID = (byte) 0x10;
 
 
 
@@ -135,6 +136,9 @@ public class Card extends Applet {
                 break;
             case INS_ISSUE_SAVE_CERT_SECOND_HALF:
                 init.saveCertSecondHalf(apdu);
+                break;
+            case INS_GET_CARD_ID:
+                auth.getCardID(apdu);
                 break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);

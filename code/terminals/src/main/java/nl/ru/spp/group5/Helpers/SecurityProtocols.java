@@ -14,11 +14,14 @@ public class SecurityProtocols {
 
     // Method for mutual authentication between card and terminal/vending machine
     public static boolean mutualAuthentication(CardChannel channel) throws CardException{
+        // Ask card to send its cardID
+        byte[] cardID = getCardID(channel);
+
         // Ask card to send its certificate
         byte[] certCard = getCertFromCard(channel);
 
         // Check validity of certificate and if card is not blocked
-        if(!certCardValid(certCard) || Backend.isCardBlocked("123")){
+        if(!certCardValid(certCard) || Backend.isCardBlocked(new String(cardID))){
             System.out.println("Something went wrong while authenticating");
             return false;
         }
@@ -32,6 +35,20 @@ public class SecurityProtocols {
         calculatex2AndSend();
 
         return true; 
+    }
+
+    private static byte[] getCardID(CardChannel channel) throws CardException{
+        // Sending ID request
+        CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x10, 0x00, 0x00);
+        ResponseAPDU response = channel.transmit(apdu);
+
+        // Verifying response
+        if (response.getSW() != 0x9000){
+            System.out.println("something went wrong");
+            System.exit(1);
+        }
+
+        return response.getData();
     }
 
     private static byte[] getCertFromCard(CardChannel channel) throws CardException{  
