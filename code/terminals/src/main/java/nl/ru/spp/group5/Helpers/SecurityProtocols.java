@@ -6,14 +6,46 @@ import java.security.Key;
 
 public class SecurityProtocols {
 
-    // Placeholder for shared symmetric key (Kcard)
-    private static final byte[] Kcard = {/* ... */};
-
     // Method for mutual authentication between card and terminal/vending machine
-    public boolean mutualAuthentication(String cardId, String terminalId) {
-        // Implement challenge-response protocol using Kcard
-        // Placeholder for mutual authentication logic
-        return true; // Assume authentication is successful for demonstration
+    public static boolean mutualAuthentication() {
+        // Ask card to send its certificate
+        byte[] certCard = getCertFromCard();
+
+        // Check validity of certificate and if card is not blocked
+        if(!certCardValid(certCard) || Backend.isCardBlocked("123")){
+            System.out.println("Something went wrong while authenticating");
+            return false;
+        }
+
+        // Send certificate and nonce1, retreive x1 and nonce2
+        byte[] x1AndNonce2 = sendCertAndNonce1AndGetx1AndNonce2();
+
+        // Authenticate card
+        authenticateCard(x1AndNonce2);
+
+        calculatex2AndSend();
+
+        return true; 
+    }
+
+    private static byte[] getCertFromCard(){
+        return new byte[4];
+    }
+
+    private static boolean certCardValid(bytes[] certCard){
+        return true;
+    }
+
+    private static byte[] sendCertAndNonce1AndGetx1AndNonce2(){
+        return new byte[4];
+    }
+
+    private static void authenticateCard(byte[] x1AndNonce2){
+
+    }
+
+    private static void calculatex2AndSend(){
+
     }
 
     // Method to derive a session key from the card's symmetric key and a nonce

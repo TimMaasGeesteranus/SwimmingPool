@@ -11,6 +11,7 @@ import javax.smartcardio.CardException;
 
 import nl.ru.spp.group5.Helpers.Backend;
 import nl.ru.spp.group5.Helpers.Card_Managment;
+import nl.ru.spp.group5.Helpers.SecurityProtocols;
 import nl.ru.spp.group5.Helpers.Utils;
 
 public class VendingMachineTerminal extends Terminal {
@@ -50,6 +51,9 @@ public class VendingMachineTerminal extends Terminal {
                     break;
                 case "4":
                     blockCard("0");
+                    break;
+                case "5":
+                    System.out.println(SecurityProtocols.mutualAuthentication());
                     break;
                 default:
                     Utils.clearScreen();
