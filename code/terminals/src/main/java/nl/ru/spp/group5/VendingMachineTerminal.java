@@ -53,7 +53,7 @@ public class VendingMachineTerminal extends Terminal {
                     blockCard("0");
                     break;
                 case "5":
-                    System.out.println(SecurityProtocols.mutualAuthentication());
+                    System.out.println(SecurityProtocols.mutualAuthentication(channel));
                     break;
                 default:
                     Utils.clearScreen();

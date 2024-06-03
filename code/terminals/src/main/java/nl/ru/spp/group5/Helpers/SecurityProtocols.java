@@ -2,14 +2,20 @@ package nl.ru.spp.group5.Helpers;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.smartcardio.CardChannel;
+import javax.smartcardio.CardException;
+import javax.smartcardio.CommandAPDU;
+import javax.smartcardio.ResponseAPDU;
+
+
 import java.security.Key;
 
 public class SecurityProtocols {
 
     // Method for mutual authentication between card and terminal/vending machine
-    public static boolean mutualAuthentication() {
+    public static boolean mutualAuthentication(CardChannel channel) throws CardException{
         // Ask card to send its certificate
-        byte[] certCard = getCertFromCard();
+        byte[] certCard = getCertFromCard(channel);
 
         // Check validity of certificate and if card is not blocked
         if(!certCardValid(certCard) || Backend.isCardBlocked("123")){
@@ -28,11 +34,21 @@ public class SecurityProtocols {
         return true; 
     }
 
-    private static byte[] getCertFromCard(){
-        return new byte[4];
+    private static byte[] getCertFromCard(CardChannel channel) throws CardException{  
+        // Sending cert request
+        CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x08, 0x00, 0x00);
+        ResponseAPDU response = channel.transmit(apdu);
+
+        // Verifying response
+        if (response.getSW() != 0x9000){
+            System.out.println("something went wrong");
+            System.exit(1);
+        }
+
+        return response.getData();
     }
 
-    private static boolean certCardValid(bytes[] certCard){
+    private static boolean certCardValid(byte[] certCard){
         return true;
     }
 

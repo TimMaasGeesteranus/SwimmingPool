@@ -13,13 +13,17 @@ public class Card extends Applet {
     private static final byte INS_CHECK_VALIDITY = (byte) 0x05;
     private static final byte INS_GET_REMAINING_ENTRIES = (byte) 0x06;
     private static final byte INS_BLOCK_CARD = (byte) 0x07;
-    private static final byte INS_MUTUAL_AUTHENTICATE = (byte) 0x08;
     private static final byte INS_REQUEST_SEASON_TICKET_CERTIFICATE = (byte) 0x09;
     private static final byte INS_SEND_SEASON_TICKET_CERTIFICATE = (byte) 0x0A;
     private static final byte INS_CHECK_ENTRIES = (byte) 0x0B;
     private static final byte INS_SET_ENTRIES = (byte) 0x0C;
     private static final byte INS_ISSUE_CARD = (byte) 0x0D;
     private static final byte INS_SAVE_CERTIFICATE = (byte) 0x0E;
+
+    //MUTUAL AUTHENTICATION
+    private final Auth auth;
+    private static final byte INS_RETURN_CARD_CERTIFICATE = (byte) 0x08;
+
 
 
     //ISSUE CARD
@@ -58,6 +62,7 @@ public class Card extends Applet {
         isIssued = false;
 
         init = new Init(this);
+        auth = new Auth(this);
         register();
     }
 
@@ -101,8 +106,8 @@ public class Card extends Applet {
             case INS_BLOCK_CARD:
                 blockCard();
                 break;
-            case INS_MUTUAL_AUTHENTICATE:
-                mutualAuthenticate(apdu);
+            case INS_RETURN_CARD_CERTIFICATE:
+                auth.returnCertificate(apdu);
                 break;
             case INS_REQUEST_SEASON_TICKET_CERTIFICATE:
                 requestSeasonTicketCertificate(apdu);
@@ -202,10 +207,6 @@ public class Card extends Applet {
 
     private void blockCard() {
         isBlocked = true;
-    }
-
-    private void mutualAuthenticate(APDU apdu) {
-        // Implement mutual authentication logic here
     }
 
     private void requestSeasonTicketCertificate(APDU apdu) {
