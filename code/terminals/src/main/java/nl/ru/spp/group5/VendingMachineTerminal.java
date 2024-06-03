@@ -3,6 +3,7 @@ package nl.ru.spp.group5;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Scanner;
 
@@ -14,7 +15,7 @@ import nl.ru.spp.group5.Helpers.Card_Managment;
 import nl.ru.spp.group5.Helpers.Utils;
 
 public class VendingMachineTerminal extends Terminal {
-    
+
     public static void main(String[] args) throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException{
         System.out.println("This is the vending machine terminal");
         VendingMachineTerminal vendingMachineTerminal = new VendingMachineTerminal();
@@ -22,6 +23,7 @@ public class VendingMachineTerminal extends Terminal {
     }
 
     public VendingMachineTerminal() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException{
+
     }
 
     @Override
@@ -157,8 +159,8 @@ public class VendingMachineTerminal extends Terminal {
         String cardId = "0"; // Example card ID, replace with actual logic to get card ID
 
         // Step 1: Generate card keys
-        byte[] kCard = new byte[16]; // Example key, replace with actual key generation logic
-        byte[] cardKey = new byte[16]; // Example key, replace with actual key generation logic
+        byte[] kCard = generateRandomKey();
+        byte[] cardKey = generateRandomKey();
 
         boolean issued = Card_Managment.issueCard(cardId, kCard, cardKey);
         if (!issued) {
@@ -182,6 +184,18 @@ public class VendingMachineTerminal extends Terminal {
         System.out.println("Press enter to return to the menu");
         scanner.nextLine();
         Utils.clearScreen();
+    }
+
+    public static byte[] generateRandomKey() {
+        try {
+            SecureRandom secureRandom = SecureRandom.getInstanceStrong();
+            byte[] key = new byte[16];
+            secureRandom.nextBytes(key);
+            return key;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to generate key");
+        }
     }
 
     public static void blockCard(String cardID) {
