@@ -2,16 +2,22 @@ package nl.ru.spp.group5;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Scanner;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
 
 import nl.ru.spp.group5.Helpers.Backend;
 import nl.ru.spp.group5.Helpers.Card_Managment;
+import nl.ru.spp.group5.Helpers.SecurityProtocols;
 import nl.ru.spp.group5.Helpers.Utils;
 
 public class VendingMachineTerminal extends Terminal {
@@ -27,7 +33,7 @@ public class VendingMachineTerminal extends Terminal {
     }
 
     @Override
-    public void handleCard(CardChannel channel) throws CardException {
+    public void handleCard(CardChannel channel) throws BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
         Scanner scanner = new Scanner(System.in);
         Utils.clearScreen();
 
@@ -52,6 +58,9 @@ public class VendingMachineTerminal extends Terminal {
                     break;
                 case "4":
                     blockCard("0");
+                    break;
+                case "5":
+                    System.out.println(SecurityProtocols.mutualAuthentication(channel, false, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY));
                     break;
                 default:
                     Utils.clearScreen();

@@ -54,10 +54,48 @@ public class Init {
         byte[] buffer = apdu.getBuffer();
         Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.cardCertificate, (short) (Consts.CERT_LENGTH / 2), (short) (Consts.CERT_LENGTH / 2));
 
+        // Send ok message
+        apdu.setOutgoingAndSend((short)0, (short)0);
+    }
+
+    void savePubKeyVendingFirstHalf(APDU apdu){
+        if(card.isIssued){
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+        }
+
+        // Get first half publick key and save onto card
+        byte[] buffer = apdu.getBuffer();
+        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.pubKeyVendingBytes, (short) 0, (short) (Consts.KEY_LENGTH/2));
+
+        apdu.setOutgoingAndSend((short)0, (short)0);
+    }
+
+    void savePubKeyVendingSecondHalf(APDU apdu){
+        if(card.isIssued){
+            ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
+        }
+
+        // Get second half publick key and save onto card
+        byte[] buffer = apdu.getBuffer();
+        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.pubKeyVendingBytes, (short) (Consts.CERT_LENGTH/2), (short) (Consts.KEY_LENGTH/2));
+
+        card.pubKeyVending = convertBytesToKey(card.pubKeyVendingBytes);
+
         // Block initialization
         card.isIssued = true;
 
-        // Send ok message
         apdu.setOutgoingAndSend((short)0, (short)0);
+    }
+
+    RSAPublicKey convertBytesToKey(byte[] modulus){
+        // Create exponent
+        byte[] exponent = new byte[] {0x01, 0x00, 0x01};
+
+        // Create RSA key
+        RSAPublicKey pubkey = (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, KeyBuilder.LENGTH_RSA_2048, false);
+        pubkey.setModulus(modulus, (short) 0, (short) modulus.length);
+        pubkey.setExponent(exponent, (short) 0, (short) exponent.length);
+
+        return pubkey;
     }
 }

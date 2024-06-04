@@ -13,7 +13,6 @@ public class Card extends Applet {
     private static final byte INS_CHECK_VALIDITY = (byte) 0x05;
     private static final byte INS_GET_REMAINING_ENTRIES = (byte) 0x06;
     private static final byte INS_BLOCK_CARD = (byte) 0x07;
-    private static final byte INS_MUTUAL_AUTHENTICATE = (byte) 0x08;
     private static final byte INS_REQUEST_SEASON_TICKET_CERTIFICATE = (byte) 0x09;
     private static final byte INS_SEND_SEASON_TICKET_CERTIFICATE = (byte) 0x0A;
     private static final byte INS_CHECK_ENTRIES = (byte) 0x0B;
@@ -21,18 +20,33 @@ public class Card extends Applet {
     private static final byte INS_ISSUE_CARD = (byte) 0x0D;
     private static final byte INS_SAVE_CERTIFICATE = (byte) 0x0E;
 
+    //MUTUAL AUTHENTICATION
+    private final Auth auth;
+    private static final byte INS_RETURN_CARD_CERTIFICATE = (byte) 0x08;
+    private static final byte INS_GET_CARD_ID = (byte) 0x10;
+    private static final byte INS_GET_CARD_EXPIRATION_DATE = (byte) 0x11;
+    private static final byte INS_GET_CARD_PUB_KEY = (byte) 0x12;
+    private static final byte INS_CALCULATE_X1 = (byte) 0x13;
+    private static final byte INS_GET_NONCE2 = (byte) 0x14;
+    private static final byte INS_AUTHENTICATE_TERMINAL_FIRST_HALF = (byte) 0x15;
+    private static final byte INS_AUTHENTICATE_TERMINAL_SECOND_HALF = (byte) 0x16;
+    protected byte[] x2;
 
     //ISSUE CARD
     private final Init init;
     private static final byte INS_ISSUE_GENERATEKEYS = (byte) 0x0F;
     private static final byte INS_ISSUE_SAVE_CERT_FIRST_HALF = (byte) 0x22;
     private static final byte INS_ISSUE_SAVE_CERT_SECOND_HALF = (byte) 0x24;
+    private static final byte INS_ISSUE_SAVE_PUB_KEY_FIRST_HALF = (byte) 0x23;
+    private static final byte INS_ISSUE_SAVE_PUB_KEY_SECOND_HALF = (byte) 0x25;
     protected RSAPrivateKey privKeyCard;
     protected RSAPublicKey pubKeyCard;
     protected byte[] cardID;
     protected byte[] cardExpirationDate;
     protected boolean isIssued;
     protected byte[] cardCertificate;
+    protected byte[] pubKeyVendingBytes;
+    protected RSAPublicKey pubKeyVending;
 
     private short expirationYear;
     private byte expirationMonth;
@@ -56,8 +70,11 @@ public class Card extends Applet {
         cardExpirationDate = new byte[Consts.CARD_EXP_DATE_LENGTH];
         cardCertificate = new byte[Consts.CERT_LENGTH];
         isIssued = false;
+        x2 = new byte[Consts.KEY_LENGTH];
+        pubKeyVendingBytes = new byte[Consts.KEY_LENGTH];
 
         init = new Init(this);
+        auth = new Auth(this);
         register();
     }
 
@@ -101,8 +118,8 @@ public class Card extends Applet {
             case INS_BLOCK_CARD:
                 blockCard();
                 break;
-            case INS_MUTUAL_AUTHENTICATE:
-                mutualAuthenticate(apdu);
+            case INS_RETURN_CARD_CERTIFICATE:
+                auth.returnCertificate(apdu);
                 break;
             case INS_REQUEST_SEASON_TICKET_CERTIFICATE:
                 requestSeasonTicketCertificate(apdu);
@@ -130,6 +147,33 @@ public class Card extends Applet {
                 break;
             case INS_ISSUE_SAVE_CERT_SECOND_HALF:
                 init.saveCertSecondHalf(apdu);
+                break;
+            case INS_ISSUE_SAVE_PUB_KEY_FIRST_HALF:
+                init.savePubKeyVendingFirstHalf(apdu);
+                break;
+            case INS_ISSUE_SAVE_PUB_KEY_SECOND_HALF:
+                init.savePubKeyVendingSecondHalf(apdu);
+                break;
+            case INS_GET_CARD_ID:
+                auth.returnID(apdu);
+                break;
+            case INS_GET_CARD_EXPIRATION_DATE:
+                auth.returnExpirationDate(apdu);
+                break;
+            case INS_GET_CARD_PUB_KEY:
+                auth.returnPubKey(apdu);
+                break;
+            case INS_CALCULATE_X1:
+                auth.calculatex1(apdu);
+                break;
+            case INS_GET_NONCE2:
+                auth.getNonce2(apdu);
+                break;
+            case INS_AUTHENTICATE_TERMINAL_FIRST_HALF:
+                auth.authenticateTerminalFirstHalf(apdu);
+                break;
+            case INS_AUTHENTICATE_TERMINAL_SECOND_HALF:
+                auth.authenticateTerminalSecondHalf(apdu);
                 break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
@@ -202,10 +246,6 @@ public class Card extends Applet {
 
     private void blockCard() {
         isBlocked = true;
-    }
-
-    private void mutualAuthenticate(APDU apdu) {
-        // Implement mutual authentication logic here
     }
 
     private void requestSeasonTicketCertificate(APDU apdu) {

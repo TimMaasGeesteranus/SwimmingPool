@@ -30,12 +30,14 @@ public class Utils {
     public final static int CARD_ID_LENGTH = 16;
     public final static int CARD_EXP_DATE_LENGTH = 10;
     public final static int KEY_LENGTH = 256;
+    public final static int NONCE_LENGTH = 16;
     public final static int CERT_LENGTH = KEY_LENGTH;
 
     // Method to generate a nonce for cryptographic protocols
+    // TODO: make this a counter bc thats more safe than using random
     public static byte[] generateNonce() {
         SecureRandom random = new SecureRandom();
-        byte[] nonce = new byte[16]; // 16 bytes nonce
+        byte[] nonce = new byte[NONCE_LENGTH]; // 16 bytes nonce
         random.nextBytes(nonce);
         return nonce;
     }
@@ -60,8 +62,8 @@ public class Utils {
     }
 
     public static void clearScreen() {  
-        System.out.print("\033[H\033[2J");  
-        System.out.flush();  
+        //System.out.print("\033[H\033[2J");  
+        //System.out.flush();  
     }  
 
     public static byte[] stringToBytes(String input){
