@@ -81,4 +81,31 @@ public class Auth {
 
         return nonce;
     }
+
+    void authenticateTerminalFirstHalf(APDU apdu){
+        // Get first half of x2 onto card and save
+        byte[] buffer = apdu.getBuffer();
+        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.x2, (short) 0, (short) (Consts.KEY_LENGTH/2) );
+
+        apdu.setOutgoingAndSend((short)0, (short)0);
+    }
+
+    void authenticateTerminalSecondHalf(APDU apdu){
+        // Get second half of x2 onto card and save
+        byte[] buffer = apdu.getBuffer();
+        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.x2, (short) (Consts.KEY_LENGTH/2), (short) (Consts.KEY_LENGTH/2) );
+
+        // Decrypt x2 using key
+        Cipher cipher = Cipher.getInstance(Cipher.ALG_RSA_NOPAD, false);
+        cipher.init(card.pubKeyVending, Cipher.MODE_DECRYPT);
+
+        byte[] n2 = new byte[Consts.KEY_LENGTH];
+
+        //TODO this gives an error but I dont know why?? Literally spent an hour to fix it but no clue ):
+        //cipher.doFinal(card.x2, (short) 0, (short) Consts.KEY_LENGTH, n2, (short) 0);
+
+        //TODO compare n2 with nonce2
+
+        apdu.setOutgoingAndSend((short)0, (short)0);
+    }
 }

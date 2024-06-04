@@ -32,7 +32,7 @@ import java.util.Arrays;
 public class SecurityProtocols {
 
     // Method for mutual authentication between card and terminal/vending machine
-    public static boolean mutualAuthentication(CardChannel channel, boolean isGate, RSAPublicKey pubKeyVending) throws BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException{
+    public static boolean mutualAuthentication(CardChannel channel, boolean isGate, RSAPublicKey pubKeyVending, RSAPrivateKey privKeyVending) throws BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException{
         // Ask card to send its data
         byte[] cardID = getCardID(channel);
         byte[] cardExpirationDate = getCardExpirationDate(channel);
@@ -66,7 +66,7 @@ public class SecurityProtocols {
             return false;
         }
 
-        calculatex2AndSend();
+        calculatex2AndSend(channel, privKeyVending, nonce2);
 
         return true; 
     }
@@ -196,8 +196,40 @@ public class SecurityProtocols {
         return sb.toString();
     }
 
-    private static void calculatex2AndSend(){
+    private static void calculatex2AndSend(CardChannel channel, RSAPrivateKey privKeyVending, byte[] nonce2) throws CardException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException{
+        // Setup cipher
+        Cipher cipher = Cipher.getInstance("RSA/ECB/NoPadding");
+        cipher.init(Cipher.ENCRYPT_MODE, privKeyVending);    
 
+        // Encrypt
+        byte[] x2 = cipher.doFinal(nonce2);
+
+        // Divide into two halfs because x2 is too big to send
+        byte[] firstHalf = new byte[x2.length/2];
+        byte[] secondHalf = new byte[x2.length/2];
+        System.arraycopy(x2, 0, firstHalf, 0, x2.length/2);
+        System.arraycopy(x2, x2.length/2, secondHalf, 0, x2.length/2);
+
+        // Sending first half
+        CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x15, 0x00, 0x00, firstHalf);
+
+        // Verifying response
+        ResponseAPDU response = channel.transmit(apdu);
+        if (response.getSW() != 0x9000){
+            System.out.println("something went wrong");
+            System.exit(1);
+        }
+
+        // Sending second half
+        apdu = new CommandAPDU(0x00, (byte)0x16, 0x00, 0x00, secondHalf);
+
+        // Verifying response
+        response = channel.transmit(apdu);
+        if (response.getSW() != 0x9000){
+            System.out.println(response.getSW());
+            System.out.println("something went wrong");
+            System.exit(1);
+        }
     }
 
     // Method to derive a session key from the card's symmetric key and a nonce

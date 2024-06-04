@@ -18,6 +18,7 @@ import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.SignatureException;
+import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
@@ -51,6 +52,9 @@ public class InitTerminal extends Terminal{
         // Generate certificate and send to card
         byte[] cert = generateCert(cardID, cardExpirationDate, pubKeyCard);
         sendCertToCard(channel, cert);
+
+        // Send public key vending to card
+        sendPubKeyVendingToCard(channel, TERMINAL_PUB_KEY);
 
         // Print receipt
         printReceipt(cardID, cardExpirationDate);  
@@ -135,6 +139,47 @@ public class InitTerminal extends Terminal{
             System.out.println("something went wrong");
             System.exit(1);
         }        
+    }
+
+    private void sendPubKeyVendingToCard(CardChannel channel, RSAPublicKey pubKeyVending) throws CardException{
+        // Converting key to byte array
+        byte[] modulus = new byte[KEY_LENGTH];
+        modulus = pubKeyVending.getModulus().toByteArray();
+
+        // Divide into two parts
+        byte[] firstHalf = new byte[KEY_LENGTH/2];
+        byte[] secondHalf = new byte[KEY_LENGTH/2];
+        System.arraycopy(modulus, 0, firstHalf, 0, KEY_LENGTH/2);
+        System.arraycopy(modulus, KEY_LENGTH/2, secondHalf, 0, KEY_LENGTH/2);
+   
+        // Sending first half to card
+        CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x23, 0x00, 0x00, firstHalf);
+
+        // Verifying response first half
+        ResponseAPDU response = channel.transmit(apdu);
+        if (response.getSW() == 27014){
+           System.out.println("Card is already issued and cannot be issued again.");
+           System.exit(1);
+        }
+        else if (response.getSW() != 0x9000){
+            System.out.println(response.getSW());
+           System.out.println("something went wrong");
+           System.exit(1);
+        }
+
+        // Sending second half to card
+        apdu = new CommandAPDU(0x00, (byte)0x25, 0x00, 0x00, secondHalf);
+
+        // Verifying response first half
+        response = channel.transmit(apdu);
+        if (response.getSW() == 27014){
+            System.out.println("Card is already issued and cannot be issued again.");
+            System.exit(1);
+        }
+        else if (response.getSW() != 0x9000){
+            System.out.println("something went wrong");
+            System.exit(1);
+        }
     }
 
     private void printReceipt(byte[] cardID, byte[] cardExpirationDate){
