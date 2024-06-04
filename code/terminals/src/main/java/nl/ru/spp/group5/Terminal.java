@@ -11,6 +11,10 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.List;
 import java.util.Scanner;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.smartcardio.*;
 
 import nl.ru.spp.group5.Helpers.Utils;
@@ -58,7 +62,7 @@ public abstract class Terminal{
         }
     }
 
-    abstract public void handleCard(CardChannel channel) throws InterruptedException, SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException;
+    abstract public void handleCard(CardChannel channel) throws BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeySpecException, InterruptedException, SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException;
 
     private boolean appletSelectedSuccessfully(CardChannel channel) throws CardException{
         byte[] apduBytes = {

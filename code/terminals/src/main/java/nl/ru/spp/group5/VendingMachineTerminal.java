@@ -8,6 +8,9 @@ import java.security.SignatureException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Scanner;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
 
@@ -28,7 +31,7 @@ public class VendingMachineTerminal extends Terminal {
     }
 
     @Override
-    public void handleCard(CardChannel channel) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
+    public void handleCard(CardChannel channel) throws BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
         Scanner scanner = new Scanner(System.in);
         Utils.clearScreen();
 
