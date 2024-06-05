@@ -250,12 +250,31 @@ public class Card_Managment {
             System.out.println("Certificate data received: " + bytesToHex(certificate));
 
             card.disconnect(false);
-            return certificate; // Assuming the certificate is a string
+
+            return certificate;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
+
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString();
+    }
+
+    public static String extractExpiryDate(byte[] certificate) {
+        // Assuming the expiry date is stored as a string within the certificate bytes
+        // Adjust the indices according to your certificate format
+        int expiryDateStartIndex = 10; // Example start index
+        int expiryDateLength = 10; // Example length, e.g., "2025-12-31"
+
+        return new String(certificate, expiryDateStartIndex, expiryDateLength);
+    }
+
 
     public static byte[] generateSeasonTicketCertificate(String cardId) {
         try {
