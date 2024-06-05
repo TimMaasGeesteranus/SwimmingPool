@@ -144,7 +144,8 @@ public class InitTerminal extends Terminal{
     private void sendPubKeyVendingToCard(CardChannel channel, RSAPublicKey pubKeyVending) throws CardException{
         // Converting key to byte array
         byte[] modulus = new byte[KEY_LENGTH];
-        modulus = pubKeyVending.getModulus().toByteArray();
+        byte[] modulusAndBit = new byte[KEY_LENGTH+1];
+        modulusAndBit = pubKeyVending.getModulus().toByteArray();
 
         // Divide into two parts
         byte[] firstHalf = new byte[KEY_LENGTH/2];

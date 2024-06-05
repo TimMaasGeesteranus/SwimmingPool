@@ -2,6 +2,8 @@ package nl.ru.spp.group5;
 
 import javacard.security.*;
 
+import java.math.BigInteger;
+
 import javacard.framework.*;
 
 public class Init {
@@ -88,13 +90,10 @@ public class Init {
     }
 
     RSAPublicKey convertBytesToKey(byte[] modulus){
-        // Create exponent
-        byte[] exponent = new byte[] {0x01, 0x00, 0x01};
-
         // Create RSA key
         RSAPublicKey pubkey = (RSAPublicKey) KeyBuilder.buildKey(KeyBuilder.TYPE_RSA_PUBLIC, KeyBuilder.LENGTH_RSA_2048, false);
         pubkey.setModulus(modulus, (short) 0, (short) modulus.length);
-        pubkey.setExponent(exponent, (short) 0, (short) exponent.length);
+        pubkey.setExponent(new byte[] {0x01, 0x00, 0x01}, (short) 0, (short) 3);
 
         return pubkey;
     }

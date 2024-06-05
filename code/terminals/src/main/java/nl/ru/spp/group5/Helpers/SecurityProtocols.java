@@ -216,7 +216,7 @@ public class SecurityProtocols {
         // Verifying response
         ResponseAPDU response = channel.transmit(apdu);
         if (response.getSW() != 0x9000){
-            System.out.println("something went wrong");
+            System.out.println("something went wrong 1");
             System.exit(1);
         }
 
@@ -229,7 +229,7 @@ public class SecurityProtocols {
         System.out.println(response.getData());
 
         if (response.getSW() != 0x9000){
-            System.out.println("something went wrong");
+            System.out.println("something went wrong 2");
             System.exit(1);
         }
     }

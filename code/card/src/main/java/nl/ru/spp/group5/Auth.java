@@ -1,6 +1,9 @@
 package nl.ru.spp.group5;
 
 import javacard.security.*;
+
+import java.util.Arrays;
+
 import javacard.framework.*;
 import javacardx.crypto.Cipher;
 
@@ -64,11 +67,11 @@ public class Auth {
     }
 
     void getNonce2(APDU apdu){
-        byte[] nonce2 = generateNonce();
+        card.nonce2 = generateNonce();
 
         //Prepare data
         byte[] buffer = apdu.getBuffer();
-        Util.arrayCopy(nonce2, (short) 0, buffer, (short) 0, (short) Consts.NONCE_LENGTH);
+        Util.arrayCopy(card.nonce2, (short) 0, buffer, (short) 0, (short) Consts.NONCE_LENGTH);
 
         apdu.setOutgoingAndSend((short) 0, (short) Consts.NONCE_LENGTH);
     }
@@ -96,22 +99,32 @@ public class Auth {
         Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.x2, (short) (Consts.KEY_LENGTH/2), (short) (Consts.KEY_LENGTH/2) );
 
         // Decrypt x2 using key
-        Cipher cipher = Cipher.getInstance(Cipher.ALG_RSA_PKCS1, false);
+        Cipher cipher = Cipher.getInstance(Cipher.ALG_RSA_NOPAD, false);
         cipher.init(card.pubKeyVending, Cipher.MODE_DECRYPT);
 
-        byte[] n2 = new byte[10000];
+        byte[] n2 = new byte[Consts.KEY_LENGTH];
         //TODO this gives an error but I dont know why?? Literally spent an hour to fix it but no clue ):
         cipher.doFinal(card.x2, (short) 0, (short) Consts.KEY_LENGTH, n2, (short) 0);
 
-        //TODO compare n2 with nonce2
+        byte[] paddedNonce = new byte[Consts.KEY_LENGTH];
+        Util.arrayCopy(card.nonce2, (short) 0, paddedNonce, (short) 0, (short) Consts.NONCE_LENGTH);
 
-
-        if(true){
+        // Compare n2 with nonce2
+        if(isEqual(n2, paddedNonce)){
             apdu.setOutgoingAndSend((short)0, (short)0); //36
         }
         else{
             ISOException.throwIt((short)0x6F00); //28
 
         }
+    }
+
+    boolean isEqual(byte[] array1, byte[] array2 ){
+        for (short i = 0; i < array1.length; i++) {
+            if (array1[i] != array2[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 }
