@@ -106,6 +106,15 @@ public class Auth {
 
         //TODO compare n2 with nonce2
 
-        apdu.setOutgoingAndSend((short)0, (short)0);
+        byte[] modulus = new byte[256]; // Assuming 2048-bit key
+        short length = card.pubKeyVending.getModulus(modulus, (short) 0);
+
+        if(length == 256){
+            apdu.setOutgoingAndSend((short)0, (short)0); //36
+        }
+        else{
+            ISOException.throwIt((short)0x6F00); //28
+
+        }
     }
 }
