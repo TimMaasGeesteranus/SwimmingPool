@@ -84,10 +84,13 @@ public class VendingMachineTerminal extends Terminal {
         }
 
         String currentCertificate = Card_Managment.requestSeasonTicketCertificate(cardId);
-        if (currentCertificate == null) {
-            System.out.println("No current season ticket found.");
-        } else {
+        if (currentCertificate != null) {
+            System.out.println("A season ticket already exists on this card and you cannot buy another one.");
             System.out.println("Current season ticket expires on: " + currentCertificate);
+            System.out.println("Press enter to return to the menu");
+            scanner.nextLine();
+            Utils.clearScreen();
+            return;
         }
 
         System.out.println("Confirm purchase of new season ticket? (yes/no)");
@@ -116,6 +119,7 @@ public class VendingMachineTerminal extends Terminal {
         scanner.nextLine();
         Utils.clearScreen();
     }
+
 
     public static void buyTenEntryTicket() {
         Scanner scanner = new Scanner(System.in);
