@@ -90,7 +90,8 @@ public class Auth {
         apdu.setOutgoingAndSend((short)0, (short)0);
     }
 
-   void authenticateTerminalSecondHalf(APDU apdu) {
+void authenticateTerminalSecondHalf(APDU apdu) {
+    // Get second half of x2 onto card and save
     byte[] buffer = apdu.getBuffer();
     Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.x2, (short) (Consts.KEY_LENGTH / 2), (short) (Consts.KEY_LENGTH / 2));
 
@@ -101,20 +102,22 @@ public class Auth {
     byte[] n2 = new byte[Consts.KEY_LENGTH];
     cipher.doFinal(card.x2, (short) 0, (short) Consts.KEY_LENGTH, n2, (short) 0);
 
-    // Print decrypted n2 for debugging
-    printDebug("Decrypted n2: ", n2);
-
+    // Prepare padded nonce
     byte[] paddedNonce = new byte[Consts.KEY_LENGTH];
     Util.arrayCopy(card.nonce2, (short) 0, paddedNonce, (short) 0, (short) Consts.NONCE_LENGTH);
 
-    // Print padded nonce for debugging
-    printDebug("Padded nonce2: ", paddedNonce);
-
+    // Compare n2 with paddedNonce
     if (isEqual(n2, paddedNonce)) {
-        apdu.setOutgoingAndSend((short) 0, (short) 0); //36
+        buffer[0] = 1; // Indicate success
     } else {
-        ISOException.throwIt((short) 0x6F01);
+        buffer[0] = 0; // Indicate failure
     }
+
+    // Send back n2 and paddedNonce for debugging
+    Util.arrayCopy(n2, (short) 0, buffer, (short) 1, (short) Consts.KEY_LENGTH);
+    Util.arrayCopy(paddedNonce, (short) 0, buffer, (short) (Consts.KEY_LENGTH + 1), (short) Consts.KEY_LENGTH);
+
+    apdu.setOutgoingAndSend((short) 0, (short) (Consts.KEY_LENGTH * 2 + 1));
 }
 
 boolean isEqual(byte[] array1, byte[] array2) {
@@ -129,11 +132,4 @@ boolean isEqual(byte[] array1, byte[] array2) {
     return true;
 }
 
-void printDebug(String message, byte[] data) {
-    System.out.print(message);
-    for (short i = 0; i < data.length; i++) {
-        System.out.printf("%02X ", data[i]);
-    }
-    System.out.println();
-}
 }
