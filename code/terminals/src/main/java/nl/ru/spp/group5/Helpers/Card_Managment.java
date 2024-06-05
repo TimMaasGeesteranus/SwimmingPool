@@ -258,15 +258,6 @@ public class Card_Managment {
     }
 }
 
-private static String bytesToHex(byte[] bytes) {
-    StringBuilder sb = new StringBuilder();
-    for (byte b : bytes) {
-        sb.append(String.format("%02X ", b));
-    }
-    return sb.toString();
-}
-
-
 public static String generateSeasonTicketCertificate(String cardId) {
     try {
         System.out.println("Starting certificate generation...");
@@ -306,27 +297,68 @@ public static String generateSeasonTicketCertificate(String cardId) {
 }
 
 
-    public static boolean sendSeasonTicketCertificate(String cardId, String certificate) {
-        try {
-            TerminalFactory factory = TerminalFactory.getDefault();
-            CardTerminals terminals = factory.terminals();
-            CardTerminal terminal = terminals.list().get(0);
-            Card card = terminal.connect("*");
-            CardChannel channel = card.getBasicChannel();
+public static boolean sendSeasonTicketCertificate(String cardId, String certificate) {
+    try {
+        System.out.println("Initializing terminal and card connection...");
 
-            byte[] certificateBytes = certificate.getBytes();
-            CommandAPDU sendCertificateCommand = new CommandAPDU(0x00, 0x0A, 0x00, 0x00, certificateBytes);
+        TerminalFactory factory = TerminalFactory.getDefault();
+        CardTerminals terminals = factory.terminals();
+        CardTerminal terminal = terminals.list().get(0);
 
-            ResponseAPDU response = channel.transmit(sendCertificateCommand);
-            if (response.getSW() != 0x9000) {
-                throw new CardException("Failed to send the season ticket certificate. Response: " + Integer.toHexString(response.getSW()));
-            }
+        System.out.println("Connecting to the card...");
+        Card card = terminal.connect("*");
+        CardChannel channel = card.getBasicChannel();
 
-            card.disconnect(false);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
+        byte[] certificateBytes = certificate.getBytes();
+        System.out.println("Certificate bytes to send: " + bytesToHex(certificateBytes));
+        System.out.println("Certificate length: " + certificateBytes.length);
+
+        if (certificateBytes.length != 256) {
+            System.err.println("Certificate length is not 256 bytes.");
             return false;
         }
+
+        // Split certificate into two parts
+        byte[] firstHalf = new byte[128];
+        byte[] secondHalf = new byte[128];
+        System.arraycopy(certificateBytes, 0, firstHalf, 0, 128);
+        System.arraycopy(certificateBytes, 128, secondHalf, 0, 128);
+
+        // Send first half
+        CommandAPDU sendFirstHalfCommand = new CommandAPDU(0x00, 0x0A, 0x00, 0x00, firstHalf);
+        System.out.println("Sending first half of certificate...");
+        System.out.println("APDU command (first half): " + bytesToHex(sendFirstHalfCommand.getBytes()));
+        ResponseAPDU response = channel.transmit(sendFirstHalfCommand);
+        System.out.println("Response received for first half. Status Word (SW): " + Integer.toHexString(response.getSW()));
+
+        if (response.getSW() != 0x9000) {
+            throw new CardException("Failed to send the first half of the season ticket certificate. Response: " + Integer.toHexString(response.getSW()));
+        }
+
+        // Send second half
+        CommandAPDU sendSecondHalfCommand = new CommandAPDU(0x00, 0x0A, 0x00, 0x01, secondHalf);
+        System.out.println("Sending second half of certificate...");
+        System.out.println("APDU command (second half): " + bytesToHex(sendSecondHalfCommand.getBytes()));
+        response = channel.transmit(sendSecondHalfCommand);
+        System.out.println("Response received for second half. Status Word (SW): " + Integer.toHexString(response.getSW()));
+
+        if (response.getSW() != 0x9000) {
+            throw new CardException("Failed to send the second half of the season ticket certificate. Response: " + Integer.toHexString(response.getSW()));
+        }
+
+        card.disconnect(false);
+        return true;
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
     }
 }
+
+private static String bytesToHex(byte[] bytes) {
+    StringBuilder sb = new StringBuilder();
+    for (byte b : bytes) {
+        sb.append(String.format("%02X ", b));
+    }
+    return sb.toString();
+}
+
