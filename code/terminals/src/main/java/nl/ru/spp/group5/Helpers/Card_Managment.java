@@ -216,35 +216,56 @@ public class Card_Managment {
         }
     }
 
-    public static String requestSeasonTicketCertificate(String cardId) {
-        try {
-            TerminalFactory factory = TerminalFactory.getDefault();
-            CardTerminals terminals = factory.terminals();
-            CardTerminal terminal = terminals.list().get(0);
-            Card card = terminal.connect("*");
-            CardChannel channel = card.getBasicChannel();
+ public static String requestSeasonTicketCertificate(String cardId) {
+    try {
+        System.out.println("Initializing terminal and card connection...");
 
-            CommandAPDU requestCommand = new CommandAPDU(new byte[]{
-                (byte) 0x00, // CLA
-                (byte) 0x09, // INS (custom instruction for requesting season ticket certificate)
-                (byte) 0x00, // P1
-                (byte) 0x00, // P2
-                (byte) 0x00  // Lc
-            });
+        TerminalFactory factory = TerminalFactory.getDefault();
+        CardTerminals terminals = factory.terminals();
+        CardTerminal terminal = terminals.list().get(0);
 
-            ResponseAPDU response = channel.transmit(requestCommand);
-            if (response.getSW() != 0x9000) {
-                throw new CardException("Failed to request the season ticket certificate. Response: " + Integer.toHexString(response.getSW()));
-            }
+        System.out.println("Connecting to the card...");
+        Card card = terminal.connect("*");
+        CardChannel channel = card.getBasicChannel();
 
-            byte[] certificate = response.getData();
-            card.disconnect(false);
-            return new String(certificate); // Assuming the certificate is a string
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+        System.out.println("Sending APDU command to request season ticket certificate...");
+        CommandAPDU requestCommand = new CommandAPDU(new byte[]{
+            (byte) 0x00, // CLA
+            (byte) 0x09, // INS (custom instruction for requesting season ticket certificate)
+            (byte) 0x00, // P1
+            (byte) 0x00, // P2
+            (byte) 0x00  // Lc
+        });
+
+        System.out.println("APDU command sent: " + bytesToHex(requestCommand.getBytes()));
+        
+        ResponseAPDU response = channel.transmit(requestCommand);
+
+        System.out.println("Response received. Status Word (SW): " + Integer.toHexString(response.getSW()));
+        
+        if (response.getSW() != 0x9000) {
+            throw new CardException("Failed to request the season ticket certificate. Response: " + Integer.toHexString(response.getSW()));
         }
+
+        byte[] certificate = response.getData();
+        System.out.println("Certificate data received: " + bytesToHex(certificate));
+
+        card.disconnect(false);
+        return new String(certificate); // Assuming the certificate is a string
+    } catch (Exception e) {
+        e.printStackTrace();
+        return null;
     }
+}
+
+private static String bytesToHex(byte[] bytes) {
+    StringBuilder sb = new StringBuilder();
+    for (byte b : bytes) {
+        sb.append(String.format("%02X ", b));
+    }
+    return sb.toString();
+}
+
 
     public static String generateSeasonTicketCertificate(String cardId) {
         try {
