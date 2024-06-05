@@ -96,20 +96,17 @@ public class Auth {
         Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.x2, (short) (Consts.KEY_LENGTH/2), (short) (Consts.KEY_LENGTH/2) );
 
         // Decrypt x2 using key
-        Cipher cipher = Cipher.getInstance(Cipher.ALG_RSA_NOPAD, false);
+        Cipher cipher = Cipher.getInstance(Cipher.ALG_RSA_PKCS1, false);
         cipher.init(card.pubKeyVending, Cipher.MODE_DECRYPT);
 
-        byte[] n2 = new byte[Consts.KEY_LENGTH];
-
+        byte[] n2 = new byte[10000];
         //TODO this gives an error but I dont know why?? Literally spent an hour to fix it but no clue ):
-        //cipher.doFinal(card.x2, (short) 0, (short) Consts.KEY_LENGTH, n2, (short) 0);
+        cipher.doFinal(card.x2, (short) 0, (short) Consts.KEY_LENGTH, n2, (short) 0);
 
         //TODO compare n2 with nonce2
 
-        byte[] modulus = new byte[256]; // Assuming 2048-bit key
-        short length = card.pubKeyVending.getModulus(modulus, (short) 0);
 
-        if(length == 256){
+        if(true){
             apdu.setOutgoingAndSend((short)0, (short)0); //36
         }
         else{
