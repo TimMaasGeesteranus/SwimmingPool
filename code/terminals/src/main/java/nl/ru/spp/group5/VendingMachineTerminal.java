@@ -173,6 +173,11 @@ public class VendingMachineTerminal extends Terminal {
             System.out.println("Failed to issue 10-entry ticket. Please try again.");
         }
 
+        // Update the ticket type to 10-entry if not already set to season
+        if (!"season".equals(Backend.getCardTicketType(cardId))) {
+            Backend.setCardTicketType(cardId, "entry");
+        }
+
         System.out.println("Press enter to return to the menu");
         scanner.nextLine();
         Utils.clearScreen();

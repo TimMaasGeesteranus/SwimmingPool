@@ -27,6 +27,7 @@ public class Card_Managment {
     public void initializeCard(String cardId, byte[] cardKey) {
         Backend.setCardEntries(cardId, 0);
         Backend.setCardValidity(cardId, true);
+        Backend.setCardTicketType(cardId, "none");
     }
 
     public static boolean issueCard(String cardId, byte[] kCard, byte[] cardKey) {
@@ -50,6 +51,7 @@ public class Card_Managment {
 
             Backend.setCardEntries(cardId, 0); // Initialize entry count for the card
             Backend.setCardValidity(cardId, true); // Mark the card as valid
+            Backend.setCardTicketType(cardId, "none"); // Set initial ticket type as none
 
             card.disconnect(false);
             return true;
@@ -75,6 +77,7 @@ public class Card_Managment {
             boolean success = sendSeasonTicketCertificate(cardId, newCertificate);
             if (success) {
                 System.out.println("Season ticket recharged successfully.");
+                Backend.setCardTicketType(cardId, "season");
             } else {
                 System.out.println("Failed to recharge the season ticket.");
             }
@@ -88,6 +91,7 @@ public class Card_Managment {
             boolean success = setEntries(cardId, newEntries);
             if (success) {
                 System.out.println("10-entry ticket recharged successfully.");
+                Backend.setCardTicketType(cardId, "entry");
             } else {
                 System.out.println("Failed to recharge the 10-entry ticket.");
             }
@@ -276,8 +280,9 @@ public class Card_Managment {
             byte[] signedData = signature.sign();
             System.out.println("Data signed successfully. Signature length: " + signedData.length);
 
-            // Save expiry date in the backend
+            // Save expiry date and ticket type in the backend
             Backend.setCardExpiryDate(cardId, expiryDate);
+            Backend.setCardTicketType(cardId, "season");
 
             return signedData;
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {

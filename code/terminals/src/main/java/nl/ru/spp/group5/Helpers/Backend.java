@@ -8,10 +8,10 @@ import java.util.Set;
 public class Backend {
     private static final String EMPLOYEE_CODE = "123456";
     private static Set<String> blockedCards = new HashSet<>();
-
     private static Map<String, Integer> cardEntries = new HashMap<>();
     private static Map<String, Boolean> cardValidity = new HashMap<>();
-    private static Map<String, String> cardExpiryDates = new HashMap<>(); // Added map to store expiry dates
+    private static Map<String, String> cardTicketType = new HashMap<>(); // map to store ticket type
+    private static Map<String, String> cardExpiryDate = new HashMap<>(); // map to store expiry date
 
     public static String getEmployeeCode() {
         return EMPLOYEE_CODE;
@@ -41,11 +41,19 @@ public class Backend {
         return cardValidity.getOrDefault(cardId, false);
     }
 
+    public static void setCardTicketType(String cardId, String type) {
+        cardTicketType.put(cardId, type);
+    }
+
+    public static String getCardTicketType(String cardId) {
+        return cardTicketType.getOrDefault(cardId, "none");
+    }
+
     public static void setCardExpiryDate(String cardId, String expiryDate) {
-        cardExpiryDates.put(cardId, expiryDate);
+        cardExpiryDate.put(cardId, expiryDate);
     }
 
     public static String getCardExpiryDate(String cardId) {
-        return cardExpiryDates.getOrDefault(cardId, "Unknown");
+        return cardExpiryDate.get(cardId);
     }
 }
