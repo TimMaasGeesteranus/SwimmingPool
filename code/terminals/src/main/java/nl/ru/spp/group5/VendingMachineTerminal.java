@@ -70,53 +70,52 @@ public class VendingMachineTerminal extends Terminal {
         }
     }
 
-   public static void buySeasonTicket() {
-    Scanner scanner = new Scanner(System.in);
-    Utils.clearScreen();
+    public static void buySeasonTicket() {
+        Scanner scanner = new Scanner(System.in);
+        Utils.clearScreen();
 
-    System.out.println("Requesting season ticket...");
-    String cardId = "0"; // Example card ID, replace with actual logic to get card ID
+        System.out.println("Requesting season ticket...");
+        String cardId = "0"; // Example card ID, replace with actual logic to get card ID
 
-    boolean authenticated = Card_Managment.mutualAuthenticate(cardId);
-    if (!authenticated) {
-        System.out.println("Authentication failed. Returning to the menu.");
-        return;
+        boolean authenticated = Card_Managment.mutualAuthenticate(cardId);
+        if (!authenticated) {
+            System.out.println("Authentication failed. Returning to the menu.");
+            return;
+        }
+
+        String currentCertificate = Card_Managment.requestSeasonTicketCertificate(cardId);
+        if (currentCertificate == null) {
+            System.out.println("No current season ticket found.");
+        } else {
+            System.out.println("Current season ticket expires on: " + currentCertificate);
+        }
+
+        System.out.println("Confirm purchase of new season ticket? (yes/no)");
+        String confirmation = scanner.nextLine();
+        if (!confirmation.equalsIgnoreCase("yes")) {
+            System.out.println("Purchase cancelled. Returning to the menu.");
+            return;
+        }
+
+        byte[] newCertificate = Card_Managment.generateSeasonTicketCertificate(cardId);
+        if (newCertificate == null) {
+            System.out.println("Failed to generate new season ticket certificate.");
+            return;
+        }
+
+        System.out.println("Length of new certificate: " + newCertificate.length);
+
+        boolean success = Card_Managment.sendSeasonTicketCertificate(cardId, newCertificate);
+        if (success) {
+            System.out.println("Season ticket purchased successfully.");
+        } else {
+            System.out.println("Failed to update the season ticket. Please try again.");
+        }
+
+        System.out.println("Press enter to return to the menu");
+        scanner.nextLine();
+        Utils.clearScreen();
     }
-
-    String currentCertificate = Card_Managment.requestSeasonTicketCertificate(cardId);
-    if (currentCertificate == null) {
-        System.out.println("No current season ticket found.");
-    } else {
-        System.out.println("Current season ticket expires on: " + currentCertificate);
-    }
-
-    System.out.println("Confirm purchase of new season ticket? (yes/no)");
-    String confirmation = scanner.nextLine();
-    if (!confirmation.equalsIgnoreCase("yes")) {
-        System.out.println("Purchase cancelled. Returning to the menu.");
-        return;
-    }
-
-    byte[] newCertificate = Card_Managment.generateSeasonTicketCertificate(cardId);
-    if (newCertificate == null) {
-        System.out.println("Failed to generate new season ticket certificate.");
-        return;
-    }
-
-    System.out.println("Length of new certificate: " + newCertificate.length);
-
-    boolean success = Card_Managment.sendSeasonTicketCertificate(cardId, newCertificate);
-    if (success) {
-        System.out.println("Season ticket purchased successfully.");
-    } else {
-        System.out.println("Failed to update the season ticket. Please try again.");
-    }
-
-    System.out.println("Press enter to return to the menu");
-    scanner.nextLine();
-    Utils.clearScreen();
-}
-
 
     public static void buyTenEntryTicket() {
         Scanner scanner = new Scanner(System.in);
@@ -180,9 +179,13 @@ public class VendingMachineTerminal extends Terminal {
         }
 
         // Step 2: Generate and save the certificate
-        String expiryDate = "2024-12-31"; // Example expiry date, replace with actual logic
-        String certificate = "Cert_" + cardId + "_" + expiryDate; // Example certificate, replace with actual logic
-        boolean saved = Card_Managment.saveCertificate(cardId, certificate.getBytes());
+        byte[] certificate = Card_Managment.generateSeasonTicketCertificate(cardId);
+        if (certificate == null) {
+            System.out.println("Failed to generate the certificate. Returning to the menu.");
+            return;
+        }
+
+        boolean saved = Card_Managment.saveCertificate(cardId, certificate);
         if (!saved) {
             System.out.println("Failed to save the certificate. Returning to the menu.");
             return;
@@ -190,7 +193,7 @@ public class VendingMachineTerminal extends Terminal {
 
         System.out.println("New card issued successfully.");
         System.out.println("Card ID: " + cardId);
-        System.out.println("Expiry Date: " + expiryDate);
+        System.out.println("Expiry Date: 2024-12-31");
 
         System.out.println("Press enter to return to the menu");
         scanner.nextLine();
