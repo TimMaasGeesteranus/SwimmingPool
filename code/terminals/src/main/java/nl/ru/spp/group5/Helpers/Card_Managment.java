@@ -215,7 +215,7 @@ public class Card_Managment {
         }
     }
 
-    public static String requestSeasonTicketCertificate(String cardId) {
+    public static byte[] requestSeasonTicketCertificate(String cardId) {
         try {
             System.out.println("Initializing terminal and card connection...");
 
@@ -250,7 +250,7 @@ public class Card_Managment {
             System.out.println("Certificate data received: " + bytesToHex(certificate));
 
             card.disconnect(false);
-            return new String(certificate); // Assuming the certificate is a string
+            return certificate;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
