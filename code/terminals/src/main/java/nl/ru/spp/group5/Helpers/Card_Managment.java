@@ -275,15 +275,19 @@ public class Card_Managment {
         return new String(certificate, expiryDateStartIndex, expiryDateLength);
     }
 
-
     public static byte[] generateSeasonTicketCertificate(String cardId) {
         try {
-            String data = "CardID:" + cardId + ";ExpiryDate:2025-12-31";
+            String expiryDate = "2025-12-31";
+            String data = "CardID:" + cardId + ";ExpiryDate:" + expiryDate;
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(PRIVATE_KEY);
             signature.update(data.getBytes());
             byte[] signedData = signature.sign();
             System.out.println("Data signed successfully. Signature length: " + signedData.length);
+            
+            // Save expiry date in backend
+            Backend.setCardExpiryDate(cardId, expiryDate);
+            
             return signedData;
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
@@ -345,13 +349,5 @@ public class Card_Managment {
             e.printStackTrace();
             return false;
         }
-    }
-
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02X ", b));
-        }
-        return sb.toString();
     }
 }

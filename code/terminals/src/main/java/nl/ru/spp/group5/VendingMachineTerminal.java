@@ -22,14 +22,13 @@ import nl.ru.spp.group5.Helpers.Utils;
 
 public class VendingMachineTerminal extends Terminal {
 
-    public static void main(String[] args) throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException{
+    public static void main(String[] args) throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         System.out.println("This is the vending machine terminal");
         VendingMachineTerminal vendingMachineTerminal = new VendingMachineTerminal();
         vendingMachineTerminal.waitForCard();
     }
 
-    public VendingMachineTerminal() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException{
-
+    public VendingMachineTerminal() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
     }
 
     @Override
@@ -85,8 +84,8 @@ public class VendingMachineTerminal extends Terminal {
 
         byte[] currentCertificate = Card_Managment.requestSeasonTicketCertificate(cardId);
         if (currentCertificate != null && currentCertificate.length > 0) {
-            String expiryDate = Card_Managment.extractExpiryDate(currentCertificate);
-            System.out.println("A season ticket already exists on this card and you cannot buy another one.");
+            String expiryDate = Backend.getCardExpiryDate(cardId);
+            System.out.println("A season ticket already exists on this card, and you cannot buy another one.");
             System.out.println("Current season ticket expires on: " + expiryDate);
             System.out.println("Press enter to return to the menu");
             scanner.nextLine();
@@ -120,8 +119,6 @@ public class VendingMachineTerminal extends Terminal {
         scanner.nextLine();
         Utils.clearScreen();
     }
-
-
 
     public static void buyTenEntryTicket() {
         Scanner scanner = new Scanner(System.in);
