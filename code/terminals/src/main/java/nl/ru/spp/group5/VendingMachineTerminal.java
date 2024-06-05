@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
 import java.util.Scanner;
 
 import javax.crypto.BadPaddingException;
@@ -29,6 +30,7 @@ public class VendingMachineTerminal extends Terminal {
     }
 
     public VendingMachineTerminal() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+
     }
 
     @Override
@@ -83,8 +85,11 @@ public class VendingMachineTerminal extends Terminal {
         }
 
         byte[] currentCertificate = Card_Managment.requestSeasonTicketCertificate(cardId);
-        if (currentCertificate != null && currentCertificate.length > 0) {
-            String expiryDate = Backend.getCardExpiryDate(cardId);
+
+        // Check if the certificate is valid (not all zeros)
+        boolean isCertificateValid = !isAllZeros(currentCertificate);
+        if (isCertificateValid) {
+            String expiryDate = Backend.getCardExpiryDate(cardId); // Get expiry date from backend
             System.out.println("A season ticket already exists on this card, and you cannot buy another one.");
             System.out.println("Current season ticket expires on: " + expiryDate);
             System.out.println("Press enter to return to the menu");
@@ -118,6 +123,15 @@ public class VendingMachineTerminal extends Terminal {
         System.out.println("Press enter to return to the menu");
         scanner.nextLine();
         Utils.clearScreen();
+    }
+
+    private static boolean isAllZeros(byte[] data) {
+        for (byte b : data) {
+            if (b != 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static void buyTenEntryTicket() {

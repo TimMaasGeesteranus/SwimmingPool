@@ -266,28 +266,19 @@ public class Card_Managment {
         return sb.toString();
     }
 
-    public static String extractExpiryDate(byte[] certificate) {
-        // Assuming the expiry date is stored as a string within the certificate bytes
-        // Adjust the indices according to your certificate format
-        int expiryDateStartIndex = 10; // Example start index
-        int expiryDateLength = 10; // Example length, e.g., "2025-12-31"
-
-        return new String(certificate, expiryDateStartIndex, expiryDateLength);
-    }
-
     public static byte[] generateSeasonTicketCertificate(String cardId) {
         try {
-            String expiryDate = "2025-12-31";
+            String expiryDate = "2025-12-31"; // Example expiry date
             String data = "CardID:" + cardId + ";ExpiryDate:" + expiryDate;
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(PRIVATE_KEY);
             signature.update(data.getBytes());
             byte[] signedData = signature.sign();
             System.out.println("Data signed successfully. Signature length: " + signedData.length);
-            
-            // Save expiry date in backend
+
+            // Save expiry date in the backend
             Backend.setCardExpiryDate(cardId, expiryDate);
-            
+
             return signedData;
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
