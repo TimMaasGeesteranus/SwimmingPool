@@ -268,7 +268,7 @@ public class Card_Managment {
             signature.initSign(PRIVATE_KEY);
             signature.update(data.getBytes());
             byte[] signedData = signature.sign();
-            return data + ";Signature:" + Base64.getEncoder().encodeToString(signedData);
+            return signedData;
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             e.printStackTrace();
             return null;

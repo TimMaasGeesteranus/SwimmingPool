@@ -114,10 +114,6 @@ public class VendingMachineTerminal extends Terminal {
         System.out.println("xxxxxxxxxxxxx");
         System.out.println("Length of x: " + x.length());
 
-        // Extract and print the portion after "Signature:"
-        String signaturePart = x.substring(x.indexOf("Signature:") + "Signature:".length());
-        System.out.println("Signature part: " + signaturePart);
-        System.out.println("Length of signature part: " + signaturePart.length());
         boolean success = Card_Managment.sendSeasonTicketCertificate(cardId, newCertificate);
         if (success) {
             System.out.println("Season ticket purchased successfully. New expiry date: " + newCertificate);
