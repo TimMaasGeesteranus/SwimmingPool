@@ -215,7 +215,7 @@ public class Card_Managment {
         }
     }
 
-    public static String requestSeasonTicketCertificate(String cardId) {
+    public static byte[] requestSeasonTicketCertificate(String cardId) {
         try {
             System.out.println("Initializing terminal and card connection...");
 
@@ -250,23 +250,12 @@ public class Card_Managment {
             System.out.println("Certificate data received: " + bytesToHex(certificate));
 
             card.disconnect(false);
-
-            // Convert the certificate bytes to a string for easier display
-            return new String(certificate);
+            return certificate; // Assuming the certificate is a string
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
-
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02X ", b));
-        }
-        return sb.toString();
-    }
-
 
     public static byte[] generateSeasonTicketCertificate(String cardId) {
         try {
