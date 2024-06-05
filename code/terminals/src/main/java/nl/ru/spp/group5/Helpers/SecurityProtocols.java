@@ -225,8 +225,10 @@ public class SecurityProtocols {
 
         // Verifying response
         response = channel.transmit(apdu);
+        System.out.println(response.getSW());
+        //36864
+
         if (response.getSW() != 0x9000){
-            System.out.println(response.getSW());
             System.out.println("something went wrong");
             System.exit(1);
         }
