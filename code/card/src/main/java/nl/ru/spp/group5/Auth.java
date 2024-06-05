@@ -1,9 +1,6 @@
 package nl.ru.spp.group5;
 
 import javacard.security.*;
-
-import java.util.Arrays;
-
 import javacard.framework.*;
 import javacardx.crypto.Cipher;
 
@@ -109,14 +106,26 @@ public class Auth {
         byte[] paddedNonce = new byte[Consts.KEY_LENGTH];
         Util.arrayCopy(card.nonce2, (short) 0, paddedNonce, (short) 0, (short) Consts.NONCE_LENGTH);
 
-        // Compare n2 with nonce2
-        if(isEqual(n2, paddedNonce)){
-            apdu.setOutgoingAndSend((short)0, (short)0); //36
-        }
-        else{
-            ISOException.throwIt((short)0x6F00); //28
+        // concatenate both thingies
+        byte[] data = new byte[8];
+        Util.arrayCopy(n2, (short) 0, data, (short) 0, (short) 4);
+        Util.arrayCopy(paddedNonce, (short) 0, data, (short) 4, (short) 4);
 
-        }
+        // send
+        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, data, (short) 0, (short) 8);
+        apdu.setOutgoingAndSend((short) 0, (short) 8);
+
+
+
+
+        // // Compare n2 with nonce2
+        // if(isEqual(n2, paddedNonce)){
+        //     apdu.setOutgoingAndSend((short)0, (short)0); //36
+        // }
+        // else{
+        //     ISOException.throwIt((short)0x6F01);
+
+        // }
     }
 
     boolean isEqual(byte[] array1, byte[] array2 ){

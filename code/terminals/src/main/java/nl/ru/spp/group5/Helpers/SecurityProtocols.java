@@ -227,12 +227,14 @@ public class SecurityProtocols {
         response = channel.transmit(apdu);
         System.out.println(response.getSW());
         System.out.println(response.getData());
+        System.out.println(bytesToHex(response.getData()));
 
         if (response.getSW() != 0x9000){
             System.out.println("something went wrong 2");
             System.exit(1);
         }
     }
+
 
     // Method to derive a session key from the card's symmetric key and a nonce
     public byte[] deriveSessionKey(byte[] nonce) {
