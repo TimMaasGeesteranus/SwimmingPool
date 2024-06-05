@@ -267,19 +267,44 @@ private static String bytesToHex(byte[] bytes) {
 }
 
 
-    public static String generateSeasonTicketCertificate(String cardId) {
-        try {
-            String data = "CardID:" + cardId + ";ExpiryDate:2025-12-31";
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(PRIVATE_KEY);
-            signature.update(data.getBytes());
-            byte[] signedData = signature.sign();
-            return data + ";Signature:" + Base64.getEncoder().encodeToString(signedData);
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-            e.printStackTrace();
-            return null;
-        }
+public static String generateSeasonTicketCertificate(String cardId) {
+    try {
+        System.out.println("Starting certificate generation...");
+        
+        String data = "CardID:" + cardId + ";ExpiryDate:2025-12-31";
+        System.out.println("Data to be signed: " + data);
+        
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        System.out.println("Signature instance created.");
+        
+        signature.initSign(PRIVATE_KEY);
+        System.out.println("Signature initialized with private key.");
+        
+        signature.update(data.getBytes());
+        System.out.println("Data updated in signature object.");
+        
+        byte[] signedData = signature.sign();
+        System.out.println("Data signed successfully. Signature: " + Base64.getEncoder().encodeToString(signedData));
+        
+        String certificate = data + ";Signature:" + Base64.getEncoder().encodeToString(signedData);
+        System.out.println("Generated certificate: " + certificate);
+        
+        return certificate;
+    } catch (NoSuchAlgorithmException e) {
+        System.err.println("No such algorithm exception: " + e.getMessage());
+        e.printStackTrace();
+        return null;
+    } catch (InvalidKeyException e) {
+        System.err.println("Invalid key exception: " + e.getMessage());
+        e.printStackTrace();
+        return null;
+    } catch (SignatureException e) {
+        System.err.println("Signature exception: " + e.getMessage());
+        e.printStackTrace();
+        return null;
     }
+}
+
 
     public static boolean sendSeasonTicketCertificate(String cardId, String certificate) {
         try {
