@@ -277,7 +277,7 @@ public static byte[] generateSeasonTicketCertificate(String cardId) {
 }
 
 
-ppublic static boolean sendSeasonTicketCertificate(String cardId, byte[] certificateBytes) {
+public static boolean sendSeasonTicketCertificate(String cardId, byte[] certificateBytes) {
     try {
         System.out.println("Initializing terminal and card connection...");
 
