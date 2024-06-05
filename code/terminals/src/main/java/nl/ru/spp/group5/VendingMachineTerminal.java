@@ -7,7 +7,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Arrays;
 import java.util.Scanner;
 
 import javax.crypto.BadPaddingException;
