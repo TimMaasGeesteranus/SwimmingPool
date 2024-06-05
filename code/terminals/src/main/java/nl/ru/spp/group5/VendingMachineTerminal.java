@@ -103,7 +103,7 @@ public class VendingMachineTerminal extends Terminal {
         }
 
         String newCertificate = Card_Managment.generateSeasonTicketCertificate(cardId);
-        System.out.println("xxxxxxxxxxxxxx")
+        System.out.println("xxxxxxxxxxxxxx");
         boolean success = Card_Managment.sendSeasonTicketCertificate(cardId, newCertificate);
         if (success) {
             System.out.println("Season ticket purchased successfully. New expiry date: " + newCertificate);
