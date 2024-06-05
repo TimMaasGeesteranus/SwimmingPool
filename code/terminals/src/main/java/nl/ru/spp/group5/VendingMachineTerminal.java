@@ -70,61 +70,53 @@ public class VendingMachineTerminal extends Terminal {
         }
     }
 
-    public static void buySeasonTicket() {
-        Scanner scanner = new Scanner(System.in);
-        Utils.clearScreen();
+   public static void buySeasonTicket() {
+    Scanner scanner = new Scanner(System.in);
+    Utils.clearScreen();
 
-        System.out.println("Requesting season ticket...");
-        String cardId = "0"; // Example card ID, replace with actual logic to get card ID
-        
-        if (Backend.isCardBlocked(cardId)) {
-            System.out.println("This card is blocked. Returning to the menu.");
-            return;
-        }
+    System.out.println("Requesting season ticket...");
+    String cardId = "0"; // Example card ID, replace with actual logic to get card ID
 
-        boolean authenticated = Card_Managment.mutualAuthenticate(cardId);
-        if (!authenticated) {
-            System.out.println("Authentication failed. Returning to the menu.");
-            return;
-        }
-
-        String currentCertificate = Card_Managment.requestSeasonTicketCertificate(cardId);
-        if (currentCertificate == null) {
-            System.out.println("No current season ticket found.");
-        } else {
-            System.out.println("Current season ticket expires on: " + currentCertificate);
-        }
-
-        System.out.println("Confirm purchase of new season ticket? (yes/no)");
-        String confirmation = scanner.nextLine();
-        if (!confirmation.equalsIgnoreCase("yes")) {
-            System.out.println("Purchase cancelled. Returning to the menu.");
-            return;
-        }
-
-        String newCertificate = Card_Managment.generateSeasonTicketCertificate(cardId);
-        String x= newCertificate;
-        System.out.println("xxxxxxxxxxxxx");
-                System.out.println("xxxxxxxxxxxxx");
-
-        System.out.println("xxxxxxxxxxxxx");
-
-        System.out.println("xxxxxxxxxxxxx");
-
-        System.out.println("xxxxxxxxxxxxx");
-        System.out.println("Length of x: " + x.length());
-
-        boolean success = Card_Managment.sendSeasonTicketCertificate(cardId, newCertificate);
-        if (success) {
-            System.out.println("Season ticket purchased successfully. New expiry date: " + newCertificate);
-        } else {
-            System.out.println("Failed to update the season ticket. Please try again.");
-        }
-
-        System.out.println("Press enter to return to the menu");
-        scanner.nextLine();
-        Utils.clearScreen();
+    boolean authenticated = Card_Managment.mutualAuthenticate(cardId);
+    if (!authenticated) {
+        System.out.println("Authentication failed. Returning to the menu.");
+        return;
     }
+
+    String currentCertificate = Card_Managment.requestSeasonTicketCertificate(cardId);
+    if (currentCertificate == null) {
+        System.out.println("No current season ticket found.");
+    } else {
+        System.out.println("Current season ticket expires on: " + currentCertificate);
+    }
+
+    System.out.println("Confirm purchase of new season ticket? (yes/no)");
+    String confirmation = scanner.nextLine();
+    if (!confirmation.equalsIgnoreCase("yes")) {
+        System.out.println("Purchase cancelled. Returning to the menu.");
+        return;
+    }
+
+    byte[] newCertificate = Card_Managment.generateSeasonTicketCertificate(cardId);
+    if (newCertificate == null) {
+        System.out.println("Failed to generate new season ticket certificate.");
+        return;
+    }
+
+    System.out.println("Length of new certificate: " + newCertificate.length);
+
+    boolean success = Card_Managment.sendSeasonTicketCertificate(cardId, newCertificate);
+    if (success) {
+        System.out.println("Season ticket purchased successfully.");
+    } else {
+        System.out.println("Failed to update the season ticket. Please try again.");
+    }
+
+    System.out.println("Press enter to return to the menu");
+    scanner.nextLine();
+    Utils.clearScreen();
+}
+
 
     public static void buyTenEntryTicket() {
         Scanner scanner = new Scanner(System.in);

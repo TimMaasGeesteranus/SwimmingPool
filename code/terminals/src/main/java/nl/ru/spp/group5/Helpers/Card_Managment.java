@@ -261,21 +261,23 @@ public class Card_Managment {
 
 
 
-    public static String generateSeasonTicketCertificate(String cardId) {
-        try {
-            String data = "CardID:" + cardId + ";ExpiryDate:2025-12-31";
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(PRIVATE_KEY);
-            signature.update(data.getBytes());
-            byte[] signedData = signature.sign();
-            return signedData;
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-            e.printStackTrace();
-            return null;
-        }
+public static byte[] generateSeasonTicketCertificate(String cardId) {
+    try {
+        String data = "CardID:" + cardId + ";ExpiryDate:2025-12-31";
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initSign(PRIVATE_KEY);
+        signature.update(data.getBytes());
+        byte[] signedData = signature.sign();
+        System.out.println("Data signed successfully. Signature length: " + signedData.length);
+        return signedData;
+    } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+        e.printStackTrace();
+        return null;
     }
+}
 
-public static boolean sendSeasonTicketCertificate(String cardId, String certificate) {
+
+ppublic static boolean sendSeasonTicketCertificate(String cardId, byte[] certificateBytes) {
     try {
         System.out.println("Initializing terminal and card connection...");
 
@@ -287,7 +289,6 @@ public static boolean sendSeasonTicketCertificate(String cardId, String certific
         Card card = terminal.connect("*");
         CardChannel channel = card.getBasicChannel();
 
-        byte[] certificateBytes = certificate.getBytes();
         System.out.println("Certificate bytes to send: " + bytesToHex(certificateBytes));
         System.out.println("Certificate length: " + certificateBytes.length);
 
@@ -331,6 +332,7 @@ public static boolean sendSeasonTicketCertificate(String cardId, String certific
         return false;
     }
 }
+
 
 private static String bytesToHex(byte[] bytes) {
     StringBuilder sb = new StringBuilder();
