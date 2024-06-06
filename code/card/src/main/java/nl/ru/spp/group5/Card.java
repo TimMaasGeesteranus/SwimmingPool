@@ -31,6 +31,7 @@ public class Card extends Applet {
     private static final byte INS_AUTHENTICATE_TERMINAL_FIRST_HALF = (byte) 0x15;
     private static final byte INS_AUTHENTICATE_TERMINAL_SECOND_HALF = (byte) 0x16;
     protected byte[] x2;
+    protected byte[] nonce2;
 
     //ISSUE CARD
     private final Init init;
@@ -71,6 +72,7 @@ public class Card extends Applet {
         cardCertificate = new byte[Consts.CERT_LENGTH];
         isIssued = false;
         x2 = new byte[Consts.KEY_LENGTH];
+        nonce2 = new byte[Consts.NONCE_LENGTH];
         pubKeyVendingBytes = new byte[Consts.KEY_LENGTH];
 
         init = new Init(this);
