@@ -201,8 +201,12 @@ public class SecurityProtocols {
         Cipher cipher = Cipher.getInstance("RSA/ECB/NoPadding");
         cipher.init(Cipher.ENCRYPT_MODE, privKeyVending);    
 
+        // Pad nonce
+        byte[] paddedNonce2 = new byte[KEY_LENGTH];
+        System.arraycopy(nonce2, 0, paddedNonce2, 0, NONCE_LENGTH);
+
         // Encrypt
-        byte[] x2 = cipher.doFinal(nonce2);
+        byte[] x2 = cipher.doFinal(paddedNonce2);
 
         // Divide into two halfs because x2 is too big to send
         byte[] firstHalf = new byte[x2.length/2];
@@ -225,9 +229,6 @@ public class SecurityProtocols {
 
         // Verifying response
         response = channel.transmit(apdu);
-        System.out.println(response.getSW());
-        System.out.println(response.getData());
-        System.out.println(bytesToHex(response.getData()));
 
         if (response.getSW() != 0x9000){
             System.out.println("something went wrong 2");

@@ -90,46 +90,40 @@ public class Auth {
         apdu.setOutgoingAndSend((short)0, (short)0);
     }
 
-void authenticateTerminalSecondHalf(APDU apdu) {
-    // Get second half of x2 onto card and save
-    byte[] buffer = apdu.getBuffer();
-    Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.x2, (short) (Consts.KEY_LENGTH / 2), (short) (Consts.KEY_LENGTH / 2));
+    void authenticateTerminalSecondHalf(APDU apdu) {
+        // Get second half of x2 onto card and save
+        byte[] buffer = apdu.getBuffer();
+        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.x2, (short) (Consts.KEY_LENGTH / 2), (short) (Consts.KEY_LENGTH / 2));
 
-    // Decrypt x2 using key
-    Cipher cipher = Cipher.getInstance(Cipher.ALG_RSA_NOPAD, false);
-    cipher.init(card.pubKeyVending, Cipher.MODE_DECRYPT);
+        // Decrypt x2 using key
+        Cipher cipher = Cipher.getInstance(Cipher.ALG_RSA_NOPAD, false);
+        cipher.init(card.pubKeyVending, Cipher.MODE_DECRYPT);
 
-    byte[] n2 = new byte[Consts.KEY_LENGTH];
-    cipher.doFinal(card.x2, (short) 0, (short) Consts.KEY_LENGTH, n2, (short) 0);
+        byte[] n2 = new byte[Consts.KEY_LENGTH];
+        cipher.doFinal(card.x2, (short) 0, (short) Consts.KEY_LENGTH, n2, (short) 0);
 
-    // Prepare padded nonce
-    byte[] paddedNonce = new byte[Consts.KEY_LENGTH];
-    Util.arrayCopy(card.nonce2, (short) 0, paddedNonce, (short) 0, (short) Consts.NONCE_LENGTH);
+        // Prepare padded nonce
+        byte[] paddedNonce = new byte[Consts.KEY_LENGTH];
+        Util.arrayCopy(card.nonce2, (short) 0, paddedNonce, (short) 0, (short) Consts.NONCE_LENGTH);
 
-    // Compare n2 with paddedNonce
-    if (isEqual(n2, paddedNonce)) {
-        buffer[0] = 1; // Indicate success
-    } else {
-        buffer[0] = 0; // Indicate failure
-    }
-
-    // Send back n2 and paddedNonce for debugging
-    Util.arrayCopy(n2, (short) 0, buffer, (short) 1, (short) Consts.KEY_LENGTH);
-    Util.arrayCopy(paddedNonce, (short) 0, buffer, (short) (Consts.KEY_LENGTH + 1), (short) Consts.KEY_LENGTH);
-
-    apdu.setOutgoingAndSend((short) 0, (short) (Consts.KEY_LENGTH * 2 + 1));
-}
-
-boolean isEqual(byte[] array1, byte[] array2) {
-    if (array1.length != array2.length) {
-        return false;
-    }
-    for (short i = 0; i < array1.length; i++) {
-        if (array1[i] != array2[i]) {
-            return false;
+        // Compare n2 with paddedNonce
+        if (isEqual(n2, paddedNonce)) {
+            apdu.setOutgoingAndSend((short)0, (short)0); // Terminal is now authenticated
+        } else {
+            ISOException.throwIt((short) 0x6F02); // Terminal not authenticated
         }
     }
-    return true;
-}
+
+    boolean isEqual(byte[] array1, byte[] array2) {
+        if (array1.length != array2.length) {
+            return false;
+        }
+        for (short i = 0; i < array1.length; i++) {
+            if (array1[i] != array2[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 }
