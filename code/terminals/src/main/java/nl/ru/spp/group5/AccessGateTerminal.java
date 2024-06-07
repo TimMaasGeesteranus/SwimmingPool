@@ -2,10 +2,20 @@ package nl.ru.spp.group5;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.logging.*;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.smartcardio.*;
+
+import nl.ru.spp.group5.Helpers.SecurityProtocols;
 
 public class AccessGateTerminal extends Terminal {
     private static final Logger logger = Logger.getLogger(AccessGateTerminal.class.getName());
@@ -33,29 +43,55 @@ public class AccessGateTerminal extends Terminal {
     }
 
     @Override
-    public void handleCard(CardChannel channel) throws CardException {
+    public void handleCard(CardChannel channel) throws InterruptedException, BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
         logger.info("Card detected, handling card...");
 
-        // TODO: Mutual authentication
-        CommandAPDU apdu = new CommandAPDU((byte) 0x02, (byte) 0x03, (byte) 0x00, (byte) 0x00, (byte) 0x00); // TODO: what bytes are sent when?
+        // Mutual authentication
+        if(!SecurityProtocols.mutualAuthentication(channel, true, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY)){
+            System.out.println("Could not authenticate card");
+            denyAccess();
+        }
+
+        // If card has season ticket, check certificate
+        byte[] cardSeasonCert = getSeasonCertFromCard(channel);
+        if(cardSeasonCert != null){
+            if(isCertValid(cardSeasonCert)){
+                openGate();
+            }
+        }
+
+        // Check if card has entry
+        if(cardHasEntry()){
+            openGate();
+        }
+        
+        denyAccess();
+    }
+
+    //TODO seasoncert on card is probably incorrect because it wont return like it should
+    private static byte[] getSeasonCertFromCard(CardChannel channel) throws CardException{  
+        // Sending cert request
+        CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x26, 0x00, 0x00);
         ResponseAPDU response = channel.transmit(apdu);
 
-        byte[] responseBytes = response.getData();
-        String responseString = new String(responseBytes);
-        logger.info("Received response from card: " + responseString);
-
-        switch (responseString) {
-            case "true":
-                openGate();
-                break;
-            case "false":
-                denyAccess();
-                break;
-            default:
-                denyAccess();
-                break;
+        // Verifying response
+        if (response.getSW() != 0x9000){
+            System.out.println("something went wrong");
+            System.exit(1);
         }
+
+        return response.getData();
     }
+
+    private boolean isCertValid(byte[] cardSeasonCert){
+        return true;
+    }
+
+    private boolean cardHasEntry(){
+        return true;
+    }
+
+
 
     public void openGate() {
         logger.info("Access granted, opening the gate...");

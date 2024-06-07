@@ -49,12 +49,16 @@ public class Card extends Applet {
     protected byte[] pubKeyVendingBytes;
     protected RSAPublicKey pubKeyVending;
 
+    //ACCESS POOL
+    private final Access access;
+    private static final byte INS_ACCESS_GET_SEASON_CERT = (byte) 0x26;
+
     private short expirationYear;
     private byte expirationMonth;
     private byte expirationDay;
     private byte entryCounter;
     private boolean isBlocked;
-    private byte[] seasonTicketCertificate;
+    protected byte[] seasonTicketCertificate;
     private byte[] cardKey;
     private byte[] kCard;
 
@@ -77,6 +81,7 @@ public class Card extends Applet {
 
         init = new Init(this);
         auth = new Auth(this);
+        access = new Access(this);
         register();
     }
 
@@ -176,6 +181,9 @@ public class Card extends Applet {
                 break;
             case INS_AUTHENTICATE_TERMINAL_SECOND_HALF:
                 auth.authenticateTerminalSecondHalf(apdu);
+                break;
+            case INS_ACCESS_GET_SEASON_CERT:
+                access.returnSeasonCert(apdu);
                 break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
