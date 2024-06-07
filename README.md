@@ -39,7 +39,6 @@ java -jar gp.jar --list
 mvn package
 
 ### Run one of three terminals
-java -cp target/terminals-1.0-SNAPSHOT.jar:lib/bcprov-jdk15to18-1.78.1.jar nl.ru.spp.group5.InitTerminal </br>
 java -cp target/terminals-1.0-SNAPSHOT.jar:lib/bcprov-jdk15to18-1.78.1.jar nl.ru.spp.group5.AccessGateTerminal </br>
 java -cp target/terminals-1.0-SNAPSHOT.jar:lib/bcprov-jdk15to18-1.78.1.jar nl.ru.spp.group5.VendingMachineTerminal </br>
 

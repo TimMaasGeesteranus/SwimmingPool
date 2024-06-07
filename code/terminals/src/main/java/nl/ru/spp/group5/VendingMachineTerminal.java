@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Scanner;
@@ -19,6 +21,7 @@ import nl.ru.spp.group5.Helpers.Backend;
 import nl.ru.spp.group5.Helpers.Card_Managment;
 import nl.ru.spp.group5.Helpers.SecurityProtocols;
 import nl.ru.spp.group5.Helpers.Utils;
+import nl.ru.spp.group5.Helpers.Init;
 
 public class VendingMachineTerminal extends Terminal {
 
@@ -33,7 +36,7 @@ public class VendingMachineTerminal extends Terminal {
     }
 
     @Override
-    public void handleCard(CardChannel channel) throws BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
+    public void handleCard(CardChannel channel) throws InterruptedException, BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
         Scanner scanner = new Scanner(System.in);
         Utils.clearScreen();
 
@@ -48,10 +51,10 @@ public class VendingMachineTerminal extends Terminal {
 
             switch (userInput) {
                 case "1":
-                    buyNewCard();
+                    buyNewCard(channel, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
                     break;
                 case "2":
-                    buySeasonTicket();
+                    buySeasonTicket(channel, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
                     break;
                 case "3":
                     buyTenEntryTicket();
@@ -70,14 +73,15 @@ public class VendingMachineTerminal extends Terminal {
         }
     }
 
-    public static void buySeasonTicket() {
+    public static void buySeasonTicket(CardChannel channel, RSAPublicKey terminalPubKey, RSAPrivateKey terminalPrivKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, CardException{
         Scanner scanner = new Scanner(System.in);
         Utils.clearScreen();
 
         System.out.println("Requesting season ticket...");
-        String cardId = "0"; // Example card ID, replace with actual logic to get card ID
+        //TODO use cardID as byte[] everywhere
+        String cardId = new String(SecurityProtocols.getCardID(channel));
 
-        boolean authenticated = Card_Managment.mutualAuthenticate(cardId);
+        boolean authenticated = Card_Managment.mutualAuthenticate(cardId); // TODO change to SecurityProtocols.mutualAuthentication
         if (!authenticated) {
             System.out.println("Authentication failed. Returning to the menu.");
             return;
@@ -182,43 +186,67 @@ public class VendingMachineTerminal extends Terminal {
         Utils.clearScreen();
     }
 
-    public static void buyNewCard() {
-        Scanner scanner = new Scanner(System.in);
+    public static void buyNewCard(CardChannel channel, RSAPublicKey terminalPubKey, RSAPrivateKey terminalPrivKey) throws InterruptedException, SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException{
         Utils.clearScreen();
-
-        System.out.println("Issuing new card...");
-        String cardId = "0"; // Example card ID, replace with actual logic to get card ID
-
-        // Step 1: Generate card keys
-        byte[] kCard = generateRandomKey();
-        byte[] cardKey = generateRandomKey();
-
-        boolean issued = Card_Managment.issueCard(cardId, kCard, cardKey);
-        if (!issued) {
-            System.out.println("Failed to issue the card. Returning to the menu.");
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Confirm purchase of new card (yes/no)");
+        String confirmation = scanner.nextLine();
+        if (!confirmation.equalsIgnoreCase("yes")) {
+            System.out.println("Purchase cancelled. Returning to the menu.");
+            System.out.println("");
             return;
         }
 
-        // Step 2: Generate and save the certificate
-        byte[] certificate = Card_Managment.generateSeasonTicketCertificate(cardId);
-        if (certificate == null) {
-            System.out.println("Failed to generate the certificate. Returning to the menu.");
-            return;
-        }
+        Utils.clearScreen();
+        System.out.println("Issueing card. This might take a while...");
 
-        boolean saved = Card_Managment.saveCertificate(cardId, certificate);
-        if (!saved) {
-            System.out.println("Failed to save the certificate. Returning to the menu.");
-            return;
+        if(!Init.initCard(channel, terminalPubKey, terminalPrivKey)){
+            System.out.println("Something went wrong while issueing the card. Pleae try again");
         }
-
-        System.out.println("New card issued successfully.");
-        System.out.println("Card ID: " + cardId);
-        System.out.println("Expiry Date: 2024-12-31");
 
         System.out.println("Press enter to return to the menu");
         scanner.nextLine();
         Utils.clearScreen();
+
+
+        // TODO delete all functions that are no longer used due to deletion of this block code. This was duplicate code which can be removed
+
+        // Scanner scanner = new Scanner(System.in);
+        // Utils.clearScreen();
+
+        // System.out.println("Issuing new card...");
+        // String cardId = "0"; // Example card ID, replace with actual logic to get card ID
+
+        // // Step 1: Generate card keys
+        // byte[] kCard = generateRandomKey();
+        // byte[] cardKey = generateRandomKey();
+
+        // boolean issued = Card_Managment.issueCard(cardId, kCard, cardKey);
+        // if (!issued) {
+        //     System.out.println("Failed to issue the card. Returning to the menu.");
+        //     return;
+        // }
+
+        // // Step 2: Generate and save the certificate
+        // byte[] certificate = Card_Managment.generateSeasonTicketCertificate(cardId);
+        // if (certificate == null) {
+        //     System.out.println("Failed to generate the certificate. Returning to the menu.");
+        //     return;
+        // }
+
+        // boolean saved = Card_Managment.saveCertificate(cardId, certificate);
+        // if (!saved) {
+        //     System.out.println("Failed to save the certificate. Returning to the menu.");
+        //     return;
+        // }
+
+        // System.out.println("New card issued successfully.");
+        // System.out.println("Card ID: " + cardId);
+        // System.out.println("Expiry Date: 2024-12-31");
+
+        // System.out.println("Press enter to return to the menu");
+        // scanner.nextLine();
+        // Utils.clearScreen();
     }
 
     public static byte[] generateRandomKey() {

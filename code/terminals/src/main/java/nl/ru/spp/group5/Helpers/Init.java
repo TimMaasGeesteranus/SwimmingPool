@@ -1,6 +1,10 @@
-package nl.ru.spp.group5;
+package nl.ru.spp.group5.Helpers;
 
-import java.util.List;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Scanner;
 
 import javax.smartcardio.CardChannel;
@@ -10,38 +14,11 @@ import javax.smartcardio.ResponseAPDU;
 
 import nl.ru.spp.group5.Helpers.Utils;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.SignatureException;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAPublicKeySpec;
-import java.time.LocalDate;
-import java.util.Arrays;
-
 import static nl.ru.spp.group5.Helpers.Utils.*;
 
-public class InitTerminal extends Terminal{
-    
-    private InitTerminal() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException{
-        System.out.println("This is the initial terminal");
-    }
+public class Init {
 
-    public static void main(String[] args) throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException{
-        InitTerminal initTerminal = new InitTerminal();
-        initTerminal.waitForCard();  
-    }
-
-    @Override
-    public void handleCard(CardChannel channel) throws InterruptedException, SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException{
-        System.out.println("Issueing card. This might take a while...");
-
+    public static boolean initCard(CardChannel channel, RSAPublicKey terminalPubKey, RSAPrivateKey terminalPrivKey) throws InterruptedException, SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException{
         // Generate cardID and cardExpirationDate
         byte[] cardID = generateCardID();
         byte[] cardExpirationDate = getExpirationDate(10);
@@ -50,23 +27,19 @@ public class InitTerminal extends Terminal{
         byte[] pubKeyCard = generateKeysOnCard(channel, cardID, cardExpirationDate);
 
         // Generate certificate and send to card
-        byte[] cert = generateCert(cardID, cardExpirationDate, pubKeyCard);
+        byte[] cert = generateCert(cardID, cardExpirationDate, pubKeyCard, terminalPrivKey);
         sendCertToCard(channel, cert);
 
         // Send public key vending to card
-        sendPubKeyVendingToCard(channel, TERMINAL_PUB_KEY);
+        sendPubKeyVendingToCard(channel, terminalPubKey);
 
         // Print receipt
         printReceipt(cardID, cardExpirationDate);  
-        
-        // Press enter to continue
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Remove card and press enter");
-        String userInput = scanner.nextLine();
-        clearScreen();
+        // Press enter to return
+        return true;
     }
 
-    private byte[] generateKeysOnCard(CardChannel channel, byte[] cardID, byte[] cardExpirationDate) throws CardException{
+    private static byte[] generateKeysOnCard(CardChannel channel, byte[] cardID, byte[] cardExpirationDate) throws CardException{
         // Making data object from cardID and cardExpirationDate
         byte[] data = new byte[CARD_ID_LENGTH + CARD_EXP_DATE_LENGTH];
         System.arraycopy(cardID, 0, data, 0, CARD_ID_LENGTH);
@@ -90,7 +63,7 @@ public class InitTerminal extends Terminal{
         return response.getData();
     }
 
-    private byte[] generateCert(byte[] cardID, byte[] cardExpirationDate, byte[] pubKeyCard) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException{
+    private static byte[] generateCert(byte[] cardID, byte[] cardExpirationDate, byte[] pubKeyCard, RSAPrivateKey terminalPrivKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException{
         // Concatenate cardID, cardExpirationdate and pubKeyCard
         byte[] dataToSign = new byte[CARD_ID_LENGTH + CARD_EXP_DATE_LENGTH + KEY_LENGTH];
         System.arraycopy(cardID, 0, dataToSign, 0, CARD_ID_LENGTH);
@@ -98,10 +71,10 @@ public class InitTerminal extends Terminal{
         System.arraycopy(pubKeyCard, 0, dataToSign, CARD_ID_LENGTH+CARD_EXP_DATE_LENGTH, KEY_LENGTH);
         
         // Sign and return
-        return sign(dataToSign, TERMINAL_PRIV_KEY);
+        return sign(dataToSign, terminalPrivKey);
     }
 
-    private void sendCertToCard(CardChannel channel, byte[] cert) throws CardException, InterruptedException{
+    private static void sendCertToCard(CardChannel channel, byte[] cert) throws CardException, InterruptedException{
         // Making data object from certificate
         byte[] data = new byte[CERT_LENGTH];
         System.arraycopy(cert, 0, data, 0, CERT_LENGTH);
@@ -141,7 +114,7 @@ public class InitTerminal extends Terminal{
         }        
     }
 
-    private void sendPubKeyVendingToCard(CardChannel channel, RSAPublicKey pubKeyVending) throws CardException{
+    private static void sendPubKeyVendingToCard(CardChannel channel, RSAPublicKey pubKeyVending) throws CardException{
         // Converting key to byte array
         byte[] modulus = new byte[KEY_LENGTH];
         byte[] modulusAndBit = new byte[KEY_LENGTH+1];
@@ -184,7 +157,7 @@ public class InitTerminal extends Terminal{
         }
     }
 
-    private void printReceipt(byte[] cardID, byte[] cardExpirationDate){
+    private static void printReceipt(byte[] cardID, byte[] cardExpirationDate){
         String cardIDString = new String(cardID);
         String expirationDateString = new String(cardExpirationDate);
         String currentDate = Utils.getCurrentDate();

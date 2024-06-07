@@ -71,7 +71,7 @@ public class SecurityProtocols {
         return true; 
     }
 
-    private static byte[] getCardID(CardChannel channel) throws CardException{
+    public static byte[] getCardID(CardChannel channel) throws CardException{
         // Sending ID request
         CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x10, 0x00, 0x00);
         ResponseAPDU response = channel.transmit(apdu);
