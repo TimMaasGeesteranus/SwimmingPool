@@ -54,7 +54,7 @@ public class VendingMachineTerminal extends Terminal {
                     buyNewCard(channel, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
                     break;
                 case "2":
-                    buySeasonTicket();
+                    buySeasonTicket(channel, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
                     break;
                 case "3":
                     buyTenEntryTicket();
@@ -73,14 +73,15 @@ public class VendingMachineTerminal extends Terminal {
         }
     }
 
-    public static void buySeasonTicket() {
+    public static void buySeasonTicket(CardChannel channel, RSAPublicKey terminalPubKey, RSAPrivateKey terminalPrivKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, CardException{
         Scanner scanner = new Scanner(System.in);
         Utils.clearScreen();
 
         System.out.println("Requesting season ticket...");
-        String cardId = "0"; // Example card ID, replace with actual logic to get card ID
+        //TODO use cardID as byte[] everywhere
+        String cardId = new String(SecurityProtocols.getCardID(channel));
 
-        boolean authenticated = Card_Managment.mutualAuthenticate(cardId);
+        boolean authenticated = Card_Managment.mutualAuthenticate(cardId); // TODO change to SecurityProtocols.mutualAuthentication
         if (!authenticated) {
             System.out.println("Authentication failed. Returning to the menu.");
             return;
