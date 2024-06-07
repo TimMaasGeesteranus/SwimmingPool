@@ -186,15 +186,29 @@ public class VendingMachineTerminal extends Terminal {
     }
 
     public static void buyNewCard(CardChannel channel, RSAPublicKey terminalPubKey, RSAPrivateKey terminalPrivKey) throws InterruptedException, SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException{
+        Utils.clearScreen();
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Confirm purchase of new card (yes/no)");
+        String confirmation = scanner.nextLine();
+        if (!confirmation.equalsIgnoreCase("yes")) {
+            System.out.println("Purchase cancelled. Returning to the menu.");
+            System.out.println("");
+            return;
+        }
+
+        Utils.clearScreen();
         System.out.println("Issueing card. This might take a while...");
 
-        if(Init.initCard(channel, terminalPubKey, terminalPrivKey)){
-            System.out.println("success!");
-        }
-        else{
-            System.out.println("meh");
+        if(!Init.initCard(channel, terminalPubKey, terminalPrivKey)){
+            System.out.println("Something went wrong while issueing the card. Pleae try again");
         }
 
+        System.out.println("Press enter to return to the menu");
+        scanner.nextLine();
+        Utils.clearScreen();
+
+
+        // TODO delete all functions that are no longer used due to deletion of this block code. This was duplicate code which can be removed
 
         // Scanner scanner = new Scanner(System.in);
         // Utils.clearScreen();
