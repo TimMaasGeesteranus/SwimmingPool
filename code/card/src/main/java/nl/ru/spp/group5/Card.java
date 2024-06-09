@@ -5,6 +5,13 @@ import javacard.security.*;
 
 public class Card extends Applet {
 
+    // Lifecycle states
+    private static final byte STATE_INITIAL = (byte) 0x00;
+    private static final byte STATE_ISSUED = (byte) 0x01;
+    private static final byte STATE_BLOCKED = (byte) 0x02;
+    private static final byte STATE_END_OF_LIFE = (byte) 0x03;
+    private byte cardState;
+
     private static final byte INS_GET_DATA = (byte) 0x00;
     private static final byte INS_SET_DATA = (byte) 0x01;
     private static final byte INS_ISSUE_SEASON_TICKET = (byte) 0x02;
@@ -20,7 +27,7 @@ public class Card extends Applet {
     private static final byte INS_ISSUE_CARD = (byte) 0x0D;
     private static final byte INS_SAVE_CERTIFICATE = (byte) 0x0E;
 
-    //MUTUAL AUTHENTICATION
+    // MUTUAL AUTHENTICATION
     private final Auth auth;
     private static final byte INS_RETURN_CARD_CERTIFICATE = (byte) 0x08;
     private static final byte INS_GET_CARD_ID = (byte) 0x10;
@@ -33,7 +40,7 @@ public class Card extends Applet {
     protected byte[] x2;
     protected byte[] nonce2;
 
-    //ISSUE CARD
+    // ISSUE CARD
     private final Init init;
     private static final byte INS_ISSUE_GENERATEKEYS = (byte) 0x0F;
     private static final byte INS_ISSUE_SAVE_CERT_FIRST_HALF = (byte) 0x22;
@@ -49,7 +56,7 @@ public class Card extends Applet {
     protected byte[] pubKeyVendingBytes;
     protected RSAPublicKey pubKeyVending;
 
-    //ACCESS POOL
+    // ACCESS POOL
     private final Access access;
     private static final byte INS_ACCESS_GET_SEASON_CERT = (byte) 0x26;
 
@@ -69,8 +76,8 @@ public class Card extends Applet {
         entryCounter = 0;
         isBlocked = false;
         seasonTicketCertificate = new byte[Consts.KEY_LENGTH];
-        cardKey = new byte[Consts.KEY_LENGTH]; 
-        kCard = new byte[Consts.KEY_LENGTH]; 
+        cardKey = new byte[Consts.KEY_LENGTH];
+        kCard = new byte[Consts.KEY_LENGTH];
         cardID = new byte[Consts.CARD_ID_LENGTH];
         cardExpirationDate = new byte[Consts.CARD_EXP_DATE_LENGTH];
         cardCertificate = new byte[Consts.CERT_LENGTH];
@@ -82,6 +89,7 @@ public class Card extends Applet {
         init = new Init(this);
         auth = new Auth(this);
         access = new Access(this);
+        cardState = STATE_INITIAL;
         register();
     }
 
@@ -90,7 +98,7 @@ public class Card extends Applet {
     }
 
     public void process(APDU apdu) {
-        if (isBlocked) {
+        if (cardState == STATE_BLOCKED || cardState == STATE_END_OF_LIFE) {
             ISOException.throwIt(ISO7816.SW_COMMAND_NOT_ALLOWED);
         }
 
@@ -255,7 +263,10 @@ public class Card extends Applet {
     }
 
     private void blockCard() {
-        isBlocked = true;
+        if (cardState == STATE_ISSUED) {
+            cardState = STATE_BLOCKED;
+            isBlocked = true;
+        }
     }
 
     private void requestSeasonTicketCertificate(APDU apdu) {
@@ -282,10 +293,14 @@ public class Card extends Applet {
     }
 
     private void issueCard(APDU apdu) {
-        byte[] buffer = apdu.getBuffer();
-        short length = apdu.setIncomingAndReceive();
-        Util.arrayCopy(buffer, (short) (ISO7816.OFFSET_CDATA), cardKey, (short) 0, (short) 16);
-        Util.arrayCopy(buffer, (short) (ISO7816.OFFSET_CDATA + 16), kCard, (short) 0, (short) 16);
+        if (cardState == STATE_INITIAL) {
+            byte[] buffer = apdu.getBuffer();
+            short length = apdu.setIncomingAndReceive();
+            Util.arrayCopy(buffer, (short) (ISO7816.OFFSET_CDATA), cardKey, (short) 0, (short) 16);
+            Util.arrayCopy(buffer, (short) (ISO7816.OFFSET_CDATA + 16), kCard, (short) 0, (short) 16);
+            cardState = STATE_ISSUED;
+            isIssued = true;
+        }
     }
 
     private void saveCertificate(APDU apdu) {

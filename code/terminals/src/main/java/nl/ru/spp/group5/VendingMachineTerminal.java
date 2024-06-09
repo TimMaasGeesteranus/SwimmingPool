@@ -73,7 +73,7 @@ public class VendingMachineTerminal extends Terminal {
         }
     }
 
-    public static void buySeasonTicket(CardChannel channel, RSAPublicKey terminalPubKey, RSAPrivateKey terminalPrivKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, CardException{
+    public static void buySeasonTicket(CardChannel channel, RSAPublicKey terminalPubKey, RSAPrivateKey terminalPrivKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, CardException {
         Scanner scanner = new Scanner(System.in);
         Utils.clearScreen();
 
@@ -93,19 +93,22 @@ public class VendingMachineTerminal extends Terminal {
         boolean isCertificateValid = !isAllZeros(currentCertificate);
         if (isCertificateValid) {
             String expiryDate = Backend.getCardExpiryDate(cardId); // Get expiry date from backend
-            System.out.println("A season ticket already exists on this card, and you cannot buy another one.");
+            System.out.println("A season ticket already exists on this card.");
             System.out.println("Current season ticket expires on: " + expiryDate);
-            System.out.println("Press enter to return to the menu");
-            scanner.nextLine();
-            Utils.clearScreen();
-            return;
-        }
-
-        System.out.println("Confirm purchase of new season ticket? (yes/no)");
-        String confirmation = scanner.nextLine();
-        if (!confirmation.equalsIgnoreCase("yes")) {
-            System.out.println("Purchase cancelled. Returning to the menu.");
-            return;
+            System.out.println("Buying a new season ticket will override the old one and you will lose the remaining days.");
+            System.out.println("Do you still want to proceed? (yes/no)");
+            String confirmation = scanner.nextLine();
+            if (!confirmation.equalsIgnoreCase("yes")) {
+                System.out.println("Purchase cancelled. Returning to the menu.");
+                return;
+            }
+        } else {
+            System.out.println("Confirm purchase of new season ticket? (yes/no)");
+            String confirmation = scanner.nextLine();
+            if (!confirmation.equalsIgnoreCase("yes")) {
+                System.out.println("Purchase cancelled. Returning to the menu.");
+                return;
+            }
         }
 
         byte[] newCertificate = Card_Managment.generateSeasonTicketCertificate(cardId);
