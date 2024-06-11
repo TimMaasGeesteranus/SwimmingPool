@@ -17,6 +17,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -89,6 +90,27 @@ public class Utils {
         return dateFormat.format(expirationDate).getBytes();
     }
 
+    public static byte[] getExpirationDateUsingMonths(int monthsFromNow){
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, monthsFromNow);
+        Date expirationDate = calendar.getTime();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        return dateFormat.format(expirationDate).getBytes();
+    }
+
+    public static boolean isValidDate(byte[] date){
+        String dateString = new String(date);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            Date expirationDate = dateFormat.parse(dateString);
+            Date currentDate = new Date();
+            return !expirationDate.before(currentDate);
+        } catch (ParseException e) {
+            return false;
+        }     
+    }
+
     public static byte[] sign(byte[] data, RSAPrivateKey key) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException{
         Signature signature = Signature.getInstance("SHA256withRSA");
         signature.initSign(key);
@@ -123,5 +145,22 @@ public class Utils {
             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(pemContent);
             return (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
         }
+    }
+
+    public static boolean isAllZeros(byte[] data) {
+        for (byte b : data) {
+            if (b != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString();
     }
 }
