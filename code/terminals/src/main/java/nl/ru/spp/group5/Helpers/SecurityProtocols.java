@@ -33,6 +33,23 @@ public class SecurityProtocols {
 
     // Method for mutual authentication between card and terminal/vending machine
     public static boolean mutualAuthentication(CardChannel channel, boolean isGate, RSAPublicKey pubKeyVending, RSAPrivateKey privKeyVending) throws BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException{
+        try{
+            return authenticate(channel, isGate, pubKeyVending, privKeyVending);
+        } catch (Exception e){
+            try{
+                return authenticate(channel, isGate, pubKeyVending, privKeyVending);
+            } catch (Exception e2){
+                try{
+                    return authenticate(channel, isGate, pubKeyVending, privKeyVending);
+                } catch (Exception e3){
+                    System.out.println("Could not authenticate: " + e3.getMessage());
+                    return false;
+                }
+            }
+        }
+    }
+
+    private static boolean authenticate(CardChannel channel, boolean isGate, RSAPublicKey pubKeyVending, RSAPrivateKey privKeyVending) throws BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException{
         // Ask card to send its data
         byte[] cardID = getCardID(channel);
         byte[] cardExpirationDate = getCardExpirationDate(channel);
@@ -49,8 +66,7 @@ public class SecurityProtocols {
         
         // Check validity of certificate and if card is not blocked
         if(!certCardValid(certCard, data, pubKeyVending) || Backend.isCardBlocked(new String(cardID))){
-            System.out.println("Something went wrong while authenticating");
-            return false;
+            throw new CardException("Something went wrong while authenticating");
         }
 
         // Generate nonce 1
@@ -78,8 +94,7 @@ public class SecurityProtocols {
 
         // Verifying response
         if (response.getSW() != 0x9000){
-            System.out.println("something went wrong");
-            System.exit(1);
+            throw new CardException("something went wrong with getting the cardID");
         }
 
         return response.getData();
@@ -92,8 +107,7 @@ public class SecurityProtocols {
 
         // Verifying response
         if (response.getSW() != 0x9000){
-            System.out.println("something went wrong");
-            System.exit(1);
+            throw new CardException("something went wrong with getting card expiration date");
         }
 
         return response.getData();
@@ -106,8 +120,7 @@ public class SecurityProtocols {
 
         // Verifying response
         if (response.getSW() != 0x9000){
-            System.out.println("something went wrong");
-            System.exit(1);
+            throw new CardException("something went wrong with getting card public key");
         }
 
         return response.getData();
@@ -121,8 +134,7 @@ public class SecurityProtocols {
 
         // Verifying response
         if (response.getSW() != 0x9000){
-            System.out.println("something went wrong");
-            System.exit(1);
+            throw new CardException("something went wrong with getting certificate from card");
         }
 
         return response.getData();
@@ -145,8 +157,7 @@ public class SecurityProtocols {
         // Verifying response
         ResponseAPDU response = channel.transmit(apdu);
         if (response.getSW() != 0x9000){
-            System.out.println("something went wrong");
-            System.exit(1);
+            throw new CardException("something went wrong when sending nonce1");
         }
 
         return response.getData();
@@ -159,8 +170,7 @@ public class SecurityProtocols {
         // Verifying response
         ResponseAPDU response = channel.transmit(apdu);
         if (response.getSW() != 0x9000){
-            System.out.println("something went wrong");
-            System.exit(1);
+            throw new CardException("something went wrong when receiving nonce2");
         }
 
         // saving x1
@@ -209,10 +219,12 @@ public class SecurityProtocols {
         byte[] x2 = cipher.doFinal(paddedNonce2);
 
         // Divide into two halfs because x2 is too big to send
-        byte[] firstHalf = new byte[x2.length/2];
-        byte[] secondHalf = new byte[x2.length/2];
-        System.arraycopy(x2, 0, firstHalf, 0, x2.length/2);
-        System.arraycopy(x2, x2.length/2, secondHalf, 0, x2.length/2);
+        int half = KEY_LENGTH/2;
+        byte[] firstHalf = new byte[half];
+        byte[] secondHalf = new byte[half];
+        System.arraycopy(x2, 0, firstHalf, 0, half);
+        System.arraycopy(x2, half, secondHalf, 0, half);
+
 
         // Sending first half
         CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x15, 0x00, 0x00, firstHalf);
@@ -220,19 +232,17 @@ public class SecurityProtocols {
         // Verifying response
         ResponseAPDU response = channel.transmit(apdu);
         if (response.getSW() != 0x9000){
-            System.out.println("something went wrong 1");
-            System.exit(1);
+            throw new CardException("something went wrong when sending first half x2");
         }
 
         // Sending second half
-        apdu = new CommandAPDU(0x00, (byte)0x16, 0x00, 0x00, secondHalf);
+        CommandAPDU secondApdu = new CommandAPDU(0x00, (byte)0x16, 0x00, 0x00, secondHalf);
 
         // Verifying response
-        response = channel.transmit(apdu);
+        ResponseAPDU secondResponse = channel.transmit(secondApdu);
 
-        if (response.getSW() != 0x9000){
-            System.out.println("something went wrong 2");
-            System.exit(1);
+        if (secondResponse.getSW() != 0x9000){
+            throw new CardException("something went wrong when sending second half x2");
         }
     }
 
