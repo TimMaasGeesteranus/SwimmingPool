@@ -25,6 +25,12 @@ public class BuyTicket {
         byte[] buffer = apdu.getBuffer();
         short length = apdu.setIncomingAndReceive();
         Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.seasonTicketCertificate, (short) 0, length);
+        apdu.setOutgoingAndSend((short) 0, (short) 0);
+    }
+
+    void setEntries(APDU apdu) {
+        card.entryCounter = 10;
+        apdu.setOutgoingAndSend((short) 0, (short) 0);
     }
 
 }

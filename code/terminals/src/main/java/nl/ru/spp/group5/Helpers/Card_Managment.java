@@ -88,7 +88,7 @@ public class Card_Managment {
                 System.out.println("Cannot recharge: entry limit exceeded.");
                 return;
             }
-            boolean success = setEntries(cardId, newEntries);
+            boolean success = setEntries(channel, cardId, newEntries);
             if (success) {
                 System.out.println("10-entry ticket recharged successfully.");
             } else {
@@ -167,17 +167,12 @@ public class Card_Managment {
     }
 
     public static int checkEntries(String cardId) {
+        // TODO get entries from card not from backend
         return Backend.getCardEntries(cardId);
     }
 
-    public static boolean setEntries(String cardId, int entries) {
+    public static boolean setEntries(CardChannel channel, String cardId, int entries) {
         try {
-            TerminalFactory factory = TerminalFactory.getDefault();
-            CardTerminals terminals = factory.terminals();
-            CardTerminal terminal = terminals.list().get(0);
-            Card card = terminal.connect("*");
-            CardChannel channel = card.getBasicChannel();
-
             CommandAPDU setEntriesCommand = new CommandAPDU(0x00, 0x0C, 0x00, 0x00, new byte[]{(byte) entries});
 
             ResponseAPDU response = channel.transmit(setEntriesCommand);
@@ -187,7 +182,6 @@ public class Card_Managment {
 
             Backend.setCardEntries(cardId, entries);
 
-            card.disconnect(false);
             return true;
         } catch (Exception e) {
             e.printStackTrace();

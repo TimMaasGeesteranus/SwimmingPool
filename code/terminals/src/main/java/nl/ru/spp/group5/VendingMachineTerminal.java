@@ -57,7 +57,7 @@ public class VendingMachineTerminal extends Terminal {
                     buySeasonTicket(channel, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
                     break;
                 case "3":
-                    buyTenEntryTicket();
+                    buyTenEntryTicket(channel, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
                     break;
                 case "4":
                     blockCard("0");
@@ -78,13 +78,17 @@ public class VendingMachineTerminal extends Terminal {
         Utils.clearScreen();
         System.out.println("loading...");
 
+        String cardId = new String(SecurityProtocols.getCardID(channel));
+
+        if (Backend.isCardBlocked(cardId)) {
+            System.out.println("This card is blocked. Returning to the menu.");
+            return;
+        }
+
         boolean authenticated = SecurityProtocols.mutualAuthentication(channel, false, terminalPubKey, terminalPrivKey);
         if (!authenticated) {
             return;
         }
-
-        //TODO use cardID as byte[] everywhere
-        String cardId = new String(SecurityProtocols.getCardID(channel));
 
         byte[] currentCertificate = Card_Managment.requestSeasonTicketCertificate(channel);
 
@@ -140,28 +144,27 @@ public class VendingMachineTerminal extends Terminal {
         return true;
     }
 
-    public static void buyTenEntryTicket() {
+    public static void buyTenEntryTicket(CardChannel channel, RSAPublicKey terminalPubKey, RSAPrivateKey terminalPrivKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, CardException {
         Scanner scanner = new Scanner(System.in);
         Utils.clearScreen();
 
         System.out.println("Requesting 10-entry ticket...");
-        String cardId = "0"; // Example card ID, replace with actual logic to get card ID
+        String cardId = new String(SecurityProtocols.getCardID(channel));
 
         if (Backend.isCardBlocked(cardId)) {
             System.out.println("This card is blocked. Returning to the menu.");
             return;
         }
 
-        boolean authenticated = Card_Managment.mutualAuthenticate(cardId);
+        boolean authenticated = SecurityProtocols.mutualAuthentication(channel, false, terminalPubKey, terminalPrivKey);
         if (!authenticated) {
-            System.out.println("Authentication failed. Returning to the menu.");
             return;
         }
 
         int currentEntries = Card_Managment.checkEntries(cardId);
         if (currentEntries != 0) {
             System.out.println("Card already has entries. Cannot issue a new 10-entry ticket.");
-            Utils.clearScreen();
+            System.out.println("");
             return;
         }
 
@@ -172,14 +175,14 @@ public class VendingMachineTerminal extends Terminal {
             return;
         }
 
-        boolean success = Card_Managment.setEntries(cardId, 10);
+        boolean success = Card_Managment.setEntries(channel, cardId, 10);
         if (success) {
             System.out.println("10-entry ticket purchased successfully.");
         } else {
             System.out.println("Failed to issue 10-entry ticket. Please try again.");
         }
 
-        // Update the ticket type to 10-entry if not already set to season
+        // Update the ticket type to 10-entry if not already set to season TODO whats going on here?
         if (!"season".equals(Backend.getCardTicketType(cardId))) {
             Backend.setCardTicketType(cardId, "entry");
         }

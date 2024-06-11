@@ -21,7 +21,6 @@ public class Card extends Applet {
     private static final byte INS_GET_REMAINING_ENTRIES = (byte) 0x06;
     private static final byte INS_BLOCK_CARD = (byte) 0x07;
     private static final byte INS_CHECK_ENTRIES = (byte) 0x0B;
-    private static final byte INS_SET_ENTRIES = (byte) 0x0C;
     private static final byte INS_ISSUE_CARD = (byte) 0x0D;
     private static final byte INS_SAVE_CERTIFICATE = (byte) 0x0E;
 
@@ -62,14 +61,16 @@ public class Card extends Applet {
     private final BuyTicket buyTicket;
     private static final byte INS_REQUEST_SEASON_TICKET_CERTIFICATE = (byte) 0x09;
     private static final byte INS_SEND_SEASON_TICKET_CERTIFICATE = (byte) 0x0A;
+    private static final byte INS_SET_ENTRIES = (byte) 0x0C;
     protected byte[] seasonTicketCertificate;
+    protected byte entryCounter;
+
 
 
 
     private short expirationYear;
     private byte expirationMonth;
     private byte expirationDay;
-    private byte entryCounter;
     private boolean isBlocked;
     private byte[] cardKey;
     private byte[] kCard;
@@ -152,7 +153,7 @@ public class Card extends Applet {
                 checkEntries(apdu);
                 break;
             case INS_SET_ENTRIES:
-                setEntries(apdu);
+                buyTicket.setEntries(apdu);
                 break;
             case INS_ISSUE_CARD:
                 issueCard(apdu);
@@ -279,10 +280,6 @@ public class Card extends Applet {
         byte[] buffer = apdu.getBuffer();
         buffer[0] = entryCounter;
         apdu.setOutgoingAndSend((short) 0, (short) 1);
-    }
-
-    private void setEntries(APDU apdu) {
-        entryCounter = 10;
     }
 
     private void issueCard(APDU apdu) {
