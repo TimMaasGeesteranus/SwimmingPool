@@ -12,17 +12,6 @@ public class Card extends Applet {
     private static final byte STATE_END_OF_LIFE = (byte) 0x03;
     private byte cardState;
 
-    private static final byte INS_GET_DATA = (byte) 0x00;
-    private static final byte INS_SET_DATA = (byte) 0x01;
-    private static final byte INS_ISSUE_SEASON_TICKET = (byte) 0x02;
-    private static final byte INS_ISSUE_ENTRY_TICKET = (byte) 0x03;
-    private static final byte INS_USE_ENTRY = (byte) 0x04;
-    private static final byte INS_CHECK_VALIDITY = (byte) 0x05;
-    private static final byte INS_GET_REMAINING_ENTRIES = (byte) 0x06;
-    private static final byte INS_BLOCK_CARD = (byte) 0x07;
-    private static final byte INS_ISSUE_CARD = (byte) 0x0D;
-    private static final byte INS_SAVE_CERTIFICATE = (byte) 0x0E;
-
     // MUTUAL AUTHENTICATION
     private final Auth auth;
     private static final byte INS_RETURN_CARD_CERTIFICATE = (byte) 0x08;
@@ -69,25 +58,15 @@ public class Card extends Applet {
     protected byte entryCounter;
     protected byte[] seasonTicketExpirationDate;
 
-
-
-
-    private short expirationYear;
-    private byte expirationMonth;
-    private byte expirationDay;
+    // BLOCKING
+    private static final byte INS_BLOCK_CARD = (byte) 0x07;
     private boolean isBlocked;
-    private byte[] cardKey;
-    private byte[] kCard;
-
-    private byte[] data;
 
     private Card() {
-        data = new byte[256];
+        cardState = STATE_INITIAL;
         entryCounter = 0;
         isBlocked = false;
         seasonTicketCertificate = new byte[Consts.CERT_LENGTH];
-        cardKey = new byte[Consts.KEY_LENGTH];
-        kCard = new byte[Consts.KEY_LENGTH];
         cardID = new byte[Consts.CARD_ID_LENGTH];
         cardExpirationDate = new byte[Consts.CARD_EXP_DATE_LENGTH];
         seasonTicketExpirationDate = new byte[Consts.CARD_EXP_DATE_LENGTH];
@@ -101,7 +80,7 @@ public class Card extends Applet {
         auth = new Auth(this);
         access = new Access(this);
         buyTicket = new BuyTicket(this);
-        cardState = STATE_INITIAL;
+
         register();
     }
 
