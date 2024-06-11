@@ -18,6 +18,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.smartcardio.*;
 
+import nl.ru.spp.group5.Helpers.Card_Managment;
 import nl.ru.spp.group5.Helpers.SecurityProtocols;
 import nl.ru.spp.group5.Helpers.Utils;
 
@@ -62,16 +63,21 @@ public class AccessGateTerminal extends Terminal {
             if(cardSeasonCert != null){
                 if(isCertValid(channel, cardSeasonCert)){
                     openGate();
+                    return;
+                }
+                else if(cardHasEntry(channel)){
+                    openGate();
+                    return;
                 }
             }
-            // Check if card has entry
-            else if(cardHasEntry()){
+            else if(cardHasEntry(channel)){
                 openGate();
+                return;
             }
+            denyAccess();
         } catch (Exception e) {
             e.printStackTrace();
         }       
-        denyAccess();
     }
 
     private static byte[] getSeasonCertFromCard(CardChannel channel) throws CardException{  
@@ -92,10 +98,16 @@ public class AccessGateTerminal extends Terminal {
         // Concatenate cardID, cardExpirationdate and pubKeyCard so cert can be validated
         byte[] data = new byte[CARD_ID_LENGTH + CARD_EXP_DATE_LENGTH];
         byte[] cardID = SecurityProtocols.getCardID(channel);
-        byte[] cardExpirationDate = getSeasonCertExpirationDate(channel);
+        byte[] seasonCertExpirationDate = getSeasonCertExpirationDate(channel);
+
+        // Check if expirationDate is valid
+        boolean valid = Utils.isValidDate(seasonCertExpirationDate);
+        if(!valid){
+            return false;
+        }
 
         System.arraycopy(cardID, 0, data, 0, CARD_ID_LENGTH);
-        System.arraycopy(cardExpirationDate, 0, data, CARD_ID_LENGTH, CARD_EXP_DATE_LENGTH);
+        System.arraycopy(seasonCertExpirationDate, 0, data, CARD_ID_LENGTH, CARD_EXP_DATE_LENGTH);
 
         Signature sig = Signature.getInstance("SHA256withRSA");
         sig.initVerify(TERMINAL_PUB_KEY);
@@ -104,11 +116,17 @@ public class AccessGateTerminal extends Terminal {
         return sig.verify(cardSeasonCert);
     }
 
-    private boolean cardHasEntry(){
-        return true;
+    private boolean cardHasEntry(CardChannel channel){
+        int entries = Card_Managment.getEntriesFromCard(channel);
+
+        // Delete entry from card
+        if(entries > 0){
+            Card_Managment.setEntries(channel, "123", entries-1);
+            return true;
+        }
+
+        return false;
     }
-
-
 
     public void openGate() {
         logger.info("Access granted, opening the gate...");

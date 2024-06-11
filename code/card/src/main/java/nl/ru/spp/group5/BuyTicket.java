@@ -36,7 +36,9 @@ public class BuyTicket {
     }
 
     void setEntries(APDU apdu) {
-        card.entryCounter = 10;
+        byte[] buffer = apdu.getBuffer();
+        card.entryCounter = buffer[ISO7816.OFFSET_CDATA];
+
         apdu.setOutgoingAndSend((short) 0, (short) 0);
     }
 

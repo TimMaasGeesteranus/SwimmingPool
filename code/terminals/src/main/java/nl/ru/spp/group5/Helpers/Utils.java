@@ -17,6 +17,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -96,6 +97,18 @@ public class Utils {
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         return dateFormat.format(expirationDate).getBytes();
+    }
+
+    public static boolean isValidDate(byte[] date){
+        String dateString = new String(date);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        try {
+            Date expirationDate = dateFormat.parse(dateString);
+            Date currentDate = new Date();
+            return !expirationDate.before(currentDate);
+        } catch (ParseException e) {
+            return false;
+        }     
     }
 
     public static byte[] sign(byte[] data, RSAPrivateKey key) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException{
