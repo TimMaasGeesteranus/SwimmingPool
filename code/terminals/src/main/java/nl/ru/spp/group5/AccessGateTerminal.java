@@ -16,6 +16,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.smartcardio.*;
 
 import nl.ru.spp.group5.Helpers.SecurityProtocols;
+import nl.ru.spp.group5.Helpers.Utils;
 
 public class AccessGateTerminal extends Terminal {
     private static final Logger logger = Logger.getLogger(AccessGateTerminal.class.getName());
@@ -44,27 +45,30 @@ public class AccessGateTerminal extends Terminal {
 
     @Override
     public void handleCard(CardChannel channel) throws InterruptedException, BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
+        Utils.clearScreen();
         logger.info("Card detected, handling card...");
 
         // Mutual authentication
-        if(!SecurityProtocols.mutualAuthentication(channel, true, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY)){
-            System.out.println("Could not authenticate card");
-            denyAccess();
-        }
+        // if(!SecurityProtocols.mutualAuthentication(channel, true, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY)){
+        //     denyAccess();
+        // }
 
-        // If card has season ticket, check certificate
-        byte[] cardSeasonCert = getSeasonCertFromCard(channel);
-        if(cardSeasonCert != null){
-            if(isCertValid(cardSeasonCert)){
+        try{
+            // If card has season ticket, check certificate
+            byte[] cardSeasonCert = getSeasonCertFromCard(channel);
+            if(cardSeasonCert != null){
+                if(isCertValid(cardSeasonCert)){
+                    openGate();
+                }
+            }
+
+            // Check if card has entry
+            if(cardHasEntry()){
                 openGate();
             }
-        }
-
-        // Check if card has entry
-        if(cardHasEntry()){
-            openGate();
-        }
-        
+        } catch (Exception e) {
+            e.printStackTrace();
+        }       
         denyAccess();
     }
 
@@ -76,8 +80,8 @@ public class AccessGateTerminal extends Terminal {
 
         // Verifying response
         if (response.getSW() != 0x9000){
-            System.out.println("something went wrong");
-            System.exit(1);
+            System.out.println(response.getSW());
+            throw new CardException("something went wrong when requesting season ticket");
         }
 
         return response.getData();
