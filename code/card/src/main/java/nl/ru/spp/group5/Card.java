@@ -20,8 +20,6 @@ public class Card extends Applet {
     private static final byte INS_CHECK_VALIDITY = (byte) 0x05;
     private static final byte INS_GET_REMAINING_ENTRIES = (byte) 0x06;
     private static final byte INS_BLOCK_CARD = (byte) 0x07;
-    private static final byte INS_REQUEST_SEASON_TICKET_CERTIFICATE = (byte) 0x09;
-    private static final byte INS_SEND_SEASON_TICKET_CERTIFICATE = (byte) 0x0A;
     private static final byte INS_CHECK_ENTRIES = (byte) 0x0B;
     private static final byte INS_SET_ENTRIES = (byte) 0x0C;
     private static final byte INS_ISSUE_CARD = (byte) 0x0D;
@@ -60,12 +58,19 @@ public class Card extends Applet {
     private final Access access;
     private static final byte INS_ACCESS_GET_SEASON_CERT = (byte) 0x26;
 
+    // BUY TICKET
+    private final BuyTicket buyTicket;
+    private static final byte INS_REQUEST_SEASON_TICKET_CERTIFICATE = (byte) 0x09;
+    private static final byte INS_SEND_SEASON_TICKET_CERTIFICATE = (byte) 0x0A;
+    protected byte[] seasonTicketCertificate;
+
+
+
     private short expirationYear;
     private byte expirationMonth;
     private byte expirationDay;
     private byte entryCounter;
     private boolean isBlocked;
-    protected byte[] seasonTicketCertificate;
     private byte[] cardKey;
     private byte[] kCard;
 
@@ -75,7 +80,7 @@ public class Card extends Applet {
         data = new byte[256];
         entryCounter = 0;
         isBlocked = false;
-        seasonTicketCertificate = new byte[Consts.KEY_LENGTH];
+        seasonTicketCertificate = new byte[Consts.CERT_LENGTH];
         cardKey = new byte[Consts.KEY_LENGTH];
         kCard = new byte[Consts.KEY_LENGTH];
         cardID = new byte[Consts.CARD_ID_LENGTH];
@@ -89,6 +94,7 @@ public class Card extends Applet {
         init = new Init(this);
         auth = new Auth(this);
         access = new Access(this);
+        buyTicket = new BuyTicket(this);
         cardState = STATE_INITIAL;
         register();
     }
@@ -137,10 +143,10 @@ public class Card extends Applet {
                 auth.returnCertificate(apdu);
                 break;
             case INS_REQUEST_SEASON_TICKET_CERTIFICATE:
-                requestSeasonTicketCertificate(apdu);
+                buyTicket.requestSeasonTicketCertificate(apdu);
                 break;
             case INS_SEND_SEASON_TICKET_CERTIFICATE:
-                sendSeasonTicketCertificate(apdu);
+                buyTicket.sendSeasonTicketCertificate(apdu);
                 break;
             case INS_CHECK_ENTRIES:
                 checkEntries(apdu);
@@ -267,19 +273,6 @@ public class Card extends Applet {
             cardState = STATE_BLOCKED;
             isBlocked = true;
         }
-    }
-
-    private void requestSeasonTicketCertificate(APDU apdu) {
-        byte[] buffer = apdu.getBuffer();
-        short length = (short) seasonTicketCertificate.length;
-        Util.arrayCopy(seasonTicketCertificate, (short) 0, buffer, ISO7816.OFFSET_CDATA, length);
-        apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, length);
-    }
-
-    private void sendSeasonTicketCertificate(APDU apdu) {
-        byte[] buffer = apdu.getBuffer();
-        short length = apdu.setIncomingAndReceive();
-        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, seasonTicketCertificate, (short) 0, length);
     }
 
     private void checkEntries(APDU apdu) {

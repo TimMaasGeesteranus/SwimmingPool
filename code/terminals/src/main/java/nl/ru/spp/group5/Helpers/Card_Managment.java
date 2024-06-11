@@ -1,6 +1,9 @@
 package nl.ru.spp.group5.Helpers;
 
 import javax.smartcardio.*;
+
+import static nl.ru.spp.group5.Helpers.Utils.*;
+
 import java.security.*;
 import java.util.Base64;
 
@@ -59,7 +62,7 @@ public class Card_Managment {
         }
     }
 
-    public void rechargeCard(String cardId, String type) {
+    public void rechargeCard(CardChannel channel, String cardId, String type) {
         if (!Backend.isCardValid(cardId)) {
             System.out.println("Card is not valid.");
             return;
@@ -72,7 +75,7 @@ public class Card_Managment {
 
         if (type.equals("season")) {
             byte[] newCertificate = generateSeasonTicketCertificate(cardId);
-            boolean success = sendSeasonTicketCertificate(cardId, newCertificate);
+            boolean success = sendSeasonTicketCertificate(channel, cardId, newCertificate);
             if (success) {
                 System.out.println("Season ticket recharged successfully.");
             } else {
@@ -215,19 +218,8 @@ public class Card_Managment {
         }
     }
 
-    public static byte[] requestSeasonTicketCertificate(String cardId) {
+    public static byte[] requestSeasonTicketCertificate(CardChannel channel) {
         try {
-            System.out.println("Initializing terminal and card connection...");
-
-            TerminalFactory factory = TerminalFactory.getDefault();
-            CardTerminals terminals = factory.terminals();
-            CardTerminal terminal = terminals.list().get(0);
-
-            System.out.println("Connecting to the card...");
-            Card card = terminal.connect("*");
-            CardChannel channel = card.getBasicChannel();
-
-            System.out.println("Sending APDU command to request season ticket certificate...");
             CommandAPDU requestCommand = new CommandAPDU(new byte[]{
                 (byte) 0x00, // CLA
                 (byte) 0x09, // INS (custom instruction for requesting season ticket certificate)
@@ -235,22 +227,13 @@ public class Card_Managment {
                 (byte) 0x00, // P2
                 (byte) 0x00  // Lc
             });
-
-            System.out.println("APDU command sent: " + bytesToHex(requestCommand.getBytes()));
             
-            ResponseAPDU response = channel.transmit(requestCommand);
-
-            System.out.println("Response received. Status Word (SW): " + Integer.toHexString(response.getSW()));
-            
+            ResponseAPDU response = channel.transmit(requestCommand);            
             if (response.getSW() != 0x9000) {
                 throw new CardException("Failed to request the season ticket certificate. Response: " + Integer.toHexString(response.getSW()));
             }
 
             byte[] certificate = response.getData();
-            System.out.println("Certificate data received: " + bytesToHex(certificate));
-
-            card.disconnect(false);
-
             return certificate;
         } catch (Exception e) {
             e.printStackTrace();
@@ -268,13 +251,12 @@ public class Card_Managment {
 
     public static byte[] generateSeasonTicketCertificate(String cardId) {
         try {
-            String expiryDate = "2025-12-31"; // Example expiry date
+            String expiryDate = Utils.getExpirationDateUsingMonths(3);          
             String data = "CardID:" + cardId + ";ExpiryDate:" + expiryDate;
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(PRIVATE_KEY);
             signature.update(data.getBytes());
             byte[] signedData = signature.sign();
-            System.out.println("Data signed successfully. Signature length: " + signedData.length);
 
             // Save expiry date in the backend
             Backend.setCardExpiryDate(cardId, expiryDate);
@@ -286,38 +268,22 @@ public class Card_Managment {
         }
     }
 
-    public static boolean sendSeasonTicketCertificate(String cardId, byte[] certificateBytes) {
+    public static boolean sendSeasonTicketCertificate(CardChannel channel, String cardId, byte[] certificateBytes) {
         try {
-            System.out.println("Initializing terminal and card connection...");
-
-            TerminalFactory factory = TerminalFactory.getDefault();
-            CardTerminals terminals = factory.terminals();
-            CardTerminal terminal = terminals.list().get(0);
-
-            System.out.println("Connecting to the card...");
-            Card card = terminal.connect("*");
-            CardChannel channel = card.getBasicChannel();
-
-            System.out.println("Certificate bytes to send: " + bytesToHex(certificateBytes));
-            System.out.println("Certificate length: " + certificateBytes.length);
-
-            if (certificateBytes.length != 256) {
+            if (certificateBytes.length != CERT_LENGTH) {
                 System.err.println("Certificate length is not 256 bytes.");
                 return false;
             }
 
             // Split certificate into two parts
-            byte[] firstHalf = new byte[128];
-            byte[] secondHalf = new byte[128];
-            System.arraycopy(certificateBytes, 0, firstHalf, 0, 128);
-            System.arraycopy(certificateBytes, 128, secondHalf, 0, 128);
+            byte[] firstHalf = new byte[CERT_LENGTH/2];
+            byte[] secondHalf = new byte[CERT_LENGTH/2];
+            System.arraycopy(certificateBytes, 0, firstHalf, 0, CERT_LENGTH/2);
+            System.arraycopy(certificateBytes, CERT_LENGTH/2, secondHalf, 0, CERT_LENGTH/2);
 
             // Send first half
             CommandAPDU sendFirstHalfCommand = new CommandAPDU(0x00, 0x0A, 0x00, 0x00, firstHalf);
-            System.out.println("Sending first half of certificate...");
-            System.out.println("APDU command (first half): " + bytesToHex(sendFirstHalfCommand.getBytes()));
             ResponseAPDU response = channel.transmit(sendFirstHalfCommand);
-            System.out.println("Response received for first half. Status Word (SW): " + Integer.toHexString(response.getSW()));
 
             if (response.getSW() != 0x9000) {
                 throw new CardException("Failed to send the first half of the season ticket certificate. Response: " + Integer.toHexString(response.getSW()));
@@ -325,16 +291,12 @@ public class Card_Managment {
 
             // Send second half
             CommandAPDU sendSecondHalfCommand = new CommandAPDU(0x00, 0x0A, 0x00, 0x01, secondHalf);
-            System.out.println("Sending second half of certificate...");
-            System.out.println("APDU command (second half): " + bytesToHex(sendSecondHalfCommand.getBytes()));
             response = channel.transmit(sendSecondHalfCommand);
-            System.out.println("Response received for second half. Status Word (SW): " + Integer.toHexString(response.getSW()));
 
             if (response.getSW() != 0x9000) {
                 throw new CardException("Failed to send the second half of the season ticket certificate. Response: " + Integer.toHexString(response.getSW()));
             }
 
-            card.disconnect(false);
             return true;
         } catch (Exception e) {
             e.printStackTrace();

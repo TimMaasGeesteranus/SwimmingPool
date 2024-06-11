@@ -43,6 +43,7 @@ public class SecurityProtocols {
                     return authenticate(channel, isGate, pubKeyVending, privKeyVending);
                 } catch (Exception e3){
                     System.out.println("Could not authenticate: " + e3.getMessage());
+                    System.out.println("");
                     return false;
                 }
             }

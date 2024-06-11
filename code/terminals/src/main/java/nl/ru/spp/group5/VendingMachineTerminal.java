@@ -63,7 +63,7 @@ public class VendingMachineTerminal extends Terminal {
                     blockCard("0");
                     break;
                 case "5":
-                    System.out.println(SecurityProtocols.mutualAuthentication(channel, false, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY));
+                    SecurityProtocols.mutualAuthentication(channel, false, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
                     break;
                 default:
                     Utils.clearScreen();
@@ -76,21 +76,21 @@ public class VendingMachineTerminal extends Terminal {
     public static void buySeasonTicket(CardChannel channel, RSAPublicKey terminalPubKey, RSAPrivateKey terminalPrivKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, CardException {
         Scanner scanner = new Scanner(System.in);
         Utils.clearScreen();
+        System.out.println("loading...");
 
-        System.out.println("Requesting season ticket...");
-        //TODO use cardID as byte[] everywhere
-        String cardId = new String(SecurityProtocols.getCardID(channel));
-
-        boolean authenticated = Card_Managment.mutualAuthenticate(cardId); // TODO change to SecurityProtocols.mutualAuthentication
+        boolean authenticated = SecurityProtocols.mutualAuthentication(channel, false, terminalPubKey, terminalPrivKey);
         if (!authenticated) {
-            System.out.println("Authentication failed. Returning to the menu.");
             return;
         }
 
-        byte[] currentCertificate = Card_Managment.requestSeasonTicketCertificate(cardId);
+        //TODO use cardID as byte[] everywhere
+        String cardId = new String(SecurityProtocols.getCardID(channel));
+
+        byte[] currentCertificate = Card_Managment.requestSeasonTicketCertificate(channel);
 
         // Check if the certificate is valid (not all zeros)
         boolean isCertificateValid = !isAllZeros(currentCertificate);
+        Utils.clearScreen();
         if (isCertificateValid) {
             String expiryDate = Backend.getCardExpiryDate(cardId); // Get expiry date from backend
             System.out.println("A season ticket already exists on this card.");
@@ -106,7 +106,9 @@ public class VendingMachineTerminal extends Terminal {
             System.out.println("Confirm purchase of new season ticket? (yes/no)");
             String confirmation = scanner.nextLine();
             if (!confirmation.equalsIgnoreCase("yes")) {
+                Utils.clearScreen();
                 System.out.println("Purchase cancelled. Returning to the menu.");
+                System.out.println("");
                 return;
             }
         }
@@ -117,9 +119,7 @@ public class VendingMachineTerminal extends Terminal {
             return;
         }
 
-        System.out.println("Length of new certificate: " + newCertificate.length);
-
-        boolean success = Card_Managment.sendSeasonTicketCertificate(cardId, newCertificate);
+        boolean success = Card_Managment.sendSeasonTicketCertificate(channel, cardId, newCertificate);
         if (success) {
             System.out.println("Season ticket purchased successfully.");
         } else {
