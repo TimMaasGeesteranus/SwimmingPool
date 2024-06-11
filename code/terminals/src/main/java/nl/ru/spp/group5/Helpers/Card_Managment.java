@@ -19,36 +19,6 @@ public class Card_Managment {
         Backend.setCardValidity(cardId, true);
     }
 
-    public static boolean issueCard(String cardId, byte[] kCard, byte[] cardKey) {
-        try {
-            TerminalFactory factory = TerminalFactory.getDefault();
-            CardTerminals terminals = factory.terminals();
-            CardTerminal terminal = terminals.list().get(0);
-            Card card = terminal.connect("*");
-            CardChannel channel = card.getBasicChannel();
-
-            byte[] data = new byte[32];
-            System.arraycopy(kCard, 0, data, 0, 16);
-            System.arraycopy(cardKey, 0, data, 16, 16);
-
-            CommandAPDU issueCardCommand = new CommandAPDU(0x00, 0x0D, 0x00, 0x00, data);
-
-            ResponseAPDU response = channel.transmit(issueCardCommand);
-            if (response.getSW() != 0x9000) {
-                throw new CardException("Failed to issue the card. Response: " + Integer.toHexString(response.getSW()));
-            }
-
-            Backend.setCardEntries(cardId, 0); // Initialize entry count for the card
-            Backend.setCardValidity(cardId, true); // Mark the card as valid
-
-            card.disconnect(false);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     public static void blockCard(String cardId) {
         try {
             TerminalFactory factory = TerminalFactory.getDefault();
@@ -86,36 +56,6 @@ public class Card_Managment {
         return Backend.isCardValid(cardId);
     }
 
-    public static boolean updateEntryCount(String cardId, int newEntries) {
-        try {
-            TerminalFactory factory = TerminalFactory.getDefault();
-            CardTerminals terminals = factory.terminals();
-            CardTerminal terminal = terminals.list().get(0);
-            Card card = terminal.connect("*");
-            CardChannel channel = card.getBasicChannel();
-
-            CommandAPDU updateEntriesCommand = new CommandAPDU(0x00, 0x0C, 0x00, 0x00, new byte[]{(byte) newEntries});
-
-            ResponseAPDU response = channel.transmit(updateEntriesCommand);
-            if (response.getSW() != 0x9000) {
-                throw new CardException("Failed to update entries. Response: " + Integer.toHexString(response.getSW()));
-            }
-
-            Backend.setCardEntries(cardId, newEntries);
-
-            card.disconnect(false);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public static boolean mutualAuthenticate(String cardId) {
-        // Implement mutual authentication logic here
-        return true;
-    }
-
     public static int getEntriesFromCard(CardChannel channel) {
         try {
             CommandAPDU apdu = new CommandAPDU(0x00, 0x1B, 0x00, 0x00);
@@ -150,29 +90,6 @@ public class Card_Managment {
         }
     }
 
-    public static boolean saveCertificate(String cardId, byte[] certificate) {
-        try {
-            TerminalFactory factory = TerminalFactory.getDefault();
-            CardTerminals terminals = factory.terminals();
-            CardTerminal terminal = terminals.list().get(0);
-            Card card = terminal.connect("*");
-            CardChannel channel = card.getBasicChannel();
-
-            CommandAPDU saveCertificateCommand = new CommandAPDU(0x00, 0x0E, 0x00, 0x00, certificate);
-
-            ResponseAPDU response = channel.transmit(saveCertificateCommand);
-            if (response.getSW() != 0x9000) {
-                throw new CardException("Failed to save the certificate. Response: " + Integer.toHexString(response.getSW()));
-            }
-
-            card.disconnect(false);
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     public static byte[] requestSeasonTicketCertificate(CardChannel channel) {
         try {
             CommandAPDU requestCommand = new CommandAPDU(new byte[]{
@@ -196,14 +113,6 @@ public class Card_Managment {
         }
     }
 
-    private static String bytesToHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : bytes) {
-            sb.append(String.format("%02X ", b));
-        }
-        return sb.toString();
-    }
-
     public static byte[] generateSeasonTicketCertificate(byte[] cardID, RSAPrivateKey terminalPrivKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException{
         byte[] cardExpirationDate = getExpirationDateUsingMonths(3);
 
@@ -215,25 +124,6 @@ public class Card_Managment {
         // Sign and return
         return sign(dataToSign, terminalPrivKey);
     }
-
-    // public static byte[] generateSeasonTicketCertificateOLD(String cardId) { //TODO remove
-    //     try {
-    //         String expiryDate = Utils.getExpirationDateUsingMonths(3);          
-    //         String data = "CardID:" + cardId + ";ExpiryDate:" + expiryDate;
-    //         Signature signature = Signature.getInstance("SHA256withRSA");
-    //         signature.initSign(PRIVATE_KEY);
-    //         signature.update(data.getBytes());
-    //         byte[] signedData = signature.sign();
-
-    //         // Save expiry date in the backend
-    //         Backend.setCardExpiryDate(cardId, expiryDate);
-
-    //         return signedData;
-    //     } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-    //         e.printStackTrace();
-    //         return null;
-    //     }
-    // }
 
     public static boolean sendSeasonTicketCertificate(CardChannel channel, byte[] certificate) {
         try {

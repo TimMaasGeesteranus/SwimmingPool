@@ -95,7 +95,7 @@ public class VendingMachineTerminal extends Terminal {
         byte[] currentCertificate = Card_Managment.requestSeasonTicketCertificate(channel);
 
         // Check if the certificate is valid (not all zeros)
-        boolean isCertificateValid = !isAllZeros(currentCertificate);
+        boolean isCertificateValid = !Utils.isAllZeros(currentCertificate);
         Utils.clearScreen();
         if (isCertificateValid) {
             String expiryDate = Backend.getCardExpiryDate(cardIDString); // Get expiry date from backend
@@ -135,15 +135,6 @@ public class VendingMachineTerminal extends Terminal {
         System.out.println("Press enter to return to the menu");
         scanner.nextLine();
         Utils.clearScreen();
-    }
-
-    private static boolean isAllZeros(byte[] data) {
-        for (byte b : data) {
-            if (b != 0) {
-                return false;
-            }
-        }
-        return true;
     }
 
     public static void buyTenEntryTicket(CardChannel channel, RSAPublicKey terminalPubKey, RSAPrivateKey terminalPrivKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, CardException {
@@ -215,58 +206,6 @@ public class VendingMachineTerminal extends Terminal {
         System.out.println("Press enter to return to the menu");
         scanner.nextLine();
         Utils.clearScreen();
-
-
-        // TODO delete all functions that are no longer used due to deletion of this block code. This was duplicate code which can be removed
-
-        // Scanner scanner = new Scanner(System.in);
-        // Utils.clearScreen();
-
-        // System.out.println("Issuing new card...");
-        // String cardId = "0"; // Example card ID, replace with actual logic to get card ID
-
-        // // Step 1: Generate card keys
-        // byte[] kCard = generateRandomKey();
-        // byte[] cardKey = generateRandomKey();
-
-        // boolean issued = Card_Managment.issueCard(cardId, kCard, cardKey);
-        // if (!issued) {
-        //     System.out.println("Failed to issue the card. Returning to the menu.");
-        //     return;
-        // }
-
-        // // Step 2: Generate and save the certificate
-        // byte[] certificate = Card_Managment.generateSeasonTicketCertificate(cardId);
-        // if (certificate == null) {
-        //     System.out.println("Failed to generate the certificate. Returning to the menu.");
-        //     return;
-        // }
-
-        // boolean saved = Card_Managment.saveCertificate(cardId, certificate);
-        // if (!saved) {
-        //     System.out.println("Failed to save the certificate. Returning to the menu.");
-        //     return;
-        // }
-
-        // System.out.println("New card issued successfully.");
-        // System.out.println("Card ID: " + cardId);
-        // System.out.println("Expiry Date: 2024-12-31");
-
-        // System.out.println("Press enter to return to the menu");
-        // scanner.nextLine();
-        // Utils.clearScreen();
-    }
-
-    public static byte[] generateRandomKey() {
-        try {
-            SecureRandom secureRandom = SecureRandom.getInstanceStrong();
-            byte[] key = new byte[16];
-            secureRandom.nextBytes(key);
-            return key;
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Failed to generate key");
-        }
     }
 
     public static void blockCard(String cardID) {
@@ -294,36 +233,5 @@ public class VendingMachineTerminal extends Terminal {
         System.out.println("Press enter to return to the menu");
         scanner.nextLine();
         Utils.clearScreen();
-    }
-
-    public static boolean buyTenEntryTicket(String cardID) {
-        if (Backend.isCardBlocked(cardID)) {
-            System.out.println("This card is blocked. Returning to the menu.");
-            return false;
-        }
-
-        int currentEntries = getNumberOfEntries(cardID);
-        if (currentEntries > 999) {
-            return false;
-        }
-
-        int newEntries = currentEntries + 10;
-        updateEntryCount(cardID, newEntries);
-        return true;
-    }
-
-    private static int getNumberOfEntries(String cardID) {
-        // Example implementation, replace with actual logic to get the current number of entries
-        //return Card_Managment.checkEntries(cardID);
-        return 0; //TODO what?
-    }
-
-    private static void updateEntryCount(String cardID, int newEntries) {
-        // Implement this method
-        if (Backend.isCardBlocked(cardID)) {
-            System.out.println("This card is blocked. Cannot update entries.");
-            return;
-        }
-        Card_Managment.updateEntryCount(cardID, newEntries);
     }
 }

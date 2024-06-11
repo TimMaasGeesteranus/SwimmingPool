@@ -133,4 +133,21 @@ public class Utils {
             return (RSAPrivateKey) keyFactory.generatePrivate(keySpec);
         }
     }
+
+    public static boolean isAllZeros(byte[] data) {
+        for (byte b : data) {
+            if (b != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString();
+    }
 }
