@@ -98,7 +98,7 @@ public class VendingMachineTerminal extends Terminal {
         boolean isCertificateValid = !Utils.isAllZeros(currentCertificate);
         Utils.clearScreen();
         if (isCertificateValid) {
-            String expiryDate = Backend.getCardExpiryDate(cardIDString); // Get expiry date from backend
+            String expiryDate = "test"; //TODO change
             System.out.println("A season ticket already exists on this card.");
             System.out.println("Current season ticket expires on: " + expiryDate);
             System.out.println("Buying a new season ticket will override the old one and you will lose the remaining days.");
@@ -178,11 +178,6 @@ public class VendingMachineTerminal extends Terminal {
             System.out.println("10-entry ticket purchased successfully.");
         } else {
             System.out.println("Failed to issue 10-entry ticket. Please try again.");
-        }
-
-        // Update the ticket type to 10-entry if not already set to season TODO whats going on here?
-        if (!"season".equals(Backend.getCardTicketType(cardId))) {
-            Backend.setCardTicketType(cardId, "entry");
         }
 
         System.out.println("Press enter to return to the menu");

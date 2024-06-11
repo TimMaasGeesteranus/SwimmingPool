@@ -14,11 +14,6 @@ public class Card_Managment {
         // Initialization code here
     }
 
-    public void initializeCard(String cardId, byte[] cardKey) {
-        Backend.setCardEntries(cardId, 0);
-        Backend.setCardValidity(cardId, true);
-    }
-
     public static void blockCard(String cardId) {
         try {
             TerminalFactory factory = TerminalFactory.getDefault();
@@ -40,20 +35,12 @@ public class Card_Managment {
                 throw new CardException("Failed to block the card. Response: " + Integer.toHexString(response.getSW()));
             }
 
-            Backend.setCardValidity(cardId, false); // Mark the card as invalid
+            Backend.blockCard(cardId); // Mark the card as invalid
 
             card.disconnect(false);
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public void unblockCard(String cardId) {
-        Backend.setCardValidity(cardId, true); // Mark the card as valid
-    }
-
-    public boolean checkCardValidity(String cardId) {
-        return Backend.isCardValid(cardId);
     }
 
     public static int getEntriesFromCard(CardChannel channel) {
@@ -80,8 +67,6 @@ public class Card_Managment {
             if (response.getSW() != 0x9000) {
                 throw new CardException("Failed to set entries. Response: " + Integer.toHexString(response.getSW()));
             }
-
-            Backend.setCardEntries(cardId, entries);
 
             return true;
         } catch (Exception e) {
