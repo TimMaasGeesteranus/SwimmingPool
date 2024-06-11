@@ -21,16 +21,32 @@ public class BuyTicket {
         apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, Consts.CERT_LENGTH);
     }
 
-    void sendSeasonTicketCertificate(APDU apdu) {
+    void saveSeasonTicketCertificateFirstHalf(APDU apdu) {
         byte[] buffer = apdu.getBuffer();
-        short length = apdu.setIncomingAndReceive();
-        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.seasonTicketCertificate, (short) 0, length);
+        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.seasonTicketCertificate, (short) 0, (short) (Consts.CERT_LENGTH/2));
+        
+        apdu.setOutgoingAndSend((short) 0, (short) 0);
+    }
+
+    void saveSeasonTicketCertificateSecondHalf(APDU apdu) {
+        byte[] buffer = apdu.getBuffer();
+        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.seasonTicketCertificate, (short) (Consts.CERT_LENGTH/2), (short) (Consts.CERT_LENGTH/2));
+        
         apdu.setOutgoingAndSend((short) 0, (short) 0);
     }
 
     void setEntries(APDU apdu) {
         card.entryCounter = 10;
         apdu.setOutgoingAndSend((short) 0, (short) 0);
+    }
+
+    void getEntries(APDU apdu){
+        // Prepare data
+        byte[] buffer = apdu.getBuffer();
+        Util.arrayCopy(new byte[] {card.entryCounter}, (short) 0, buffer, (short) 0, (short) 1);
+
+        // Send ID
+        apdu.setOutgoingAndSend((short)0, (short) 1);    
     }
 
 }

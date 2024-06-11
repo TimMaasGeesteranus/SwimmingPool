@@ -78,9 +78,11 @@ public class VendingMachineTerminal extends Terminal {
         Utils.clearScreen();
         System.out.println("loading...");
 
-        String cardId = new String(SecurityProtocols.getCardID(channel));
+        byte[] cardID = SecurityProtocols.getCardID(channel);
+        String cardIDString = new String(cardID);
 
-        if (Backend.isCardBlocked(cardId)) {
+
+        if (Backend.isCardBlocked(cardIDString)) {
             System.out.println("This card is blocked. Returning to the menu.");
             return;
         }
@@ -96,7 +98,7 @@ public class VendingMachineTerminal extends Terminal {
         boolean isCertificateValid = !isAllZeros(currentCertificate);
         Utils.clearScreen();
         if (isCertificateValid) {
-            String expiryDate = Backend.getCardExpiryDate(cardId); // Get expiry date from backend
+            String expiryDate = Backend.getCardExpiryDate(cardIDString); // Get expiry date from backend
             System.out.println("A season ticket already exists on this card.");
             System.out.println("Current season ticket expires on: " + expiryDate);
             System.out.println("Buying a new season ticket will override the old one and you will lose the remaining days.");
@@ -117,13 +119,13 @@ public class VendingMachineTerminal extends Terminal {
             }
         }
 
-        byte[] newCertificate = Card_Managment.generateSeasonTicketCertificate(cardId);
+        byte[] newCertificate = Card_Managment.generateSeasonTicketCertificate(cardID, terminalPrivKey);
         if (newCertificate == null) {
             System.out.println("Failed to generate new season ticket certificate.");
             return;
         }
 
-        boolean success = Card_Managment.sendSeasonTicketCertificate(channel, cardId, newCertificate);
+        boolean success = Card_Managment.sendSeasonTicketCertificate(channel, newCertificate);
         if (success) {
             System.out.println("Season ticket purchased successfully.");
         } else {
@@ -161,9 +163,9 @@ public class VendingMachineTerminal extends Terminal {
             return;
         }
 
-        int currentEntries = Card_Managment.checkEntries(cardId);
+        int currentEntries = Card_Managment.getEntriesFromCard(channel);
         if (currentEntries != 0) {
-            System.out.println("Card already has entries. Cannot issue a new 10-entry ticket.");
+            System.out.println("Card still has " + currentEntries + " entries. Cannot issue a new 10-entry ticket.");
             System.out.println("");
             return;
         }
@@ -312,7 +314,8 @@ public class VendingMachineTerminal extends Terminal {
 
     private static int getNumberOfEntries(String cardID) {
         // Example implementation, replace with actual logic to get the current number of entries
-        return Card_Managment.checkEntries(cardID);
+        //return Card_Managment.checkEntries(cardID);
+        return 0; //TODO what?
     }
 
     private static void updateEntryCount(String cardID, int newEntries) {

@@ -89,13 +89,13 @@ public class Utils {
         return dateFormat.format(expirationDate).getBytes();
     }
 
-    public static String getExpirationDateUsingMonths(int monthsFromNow){
+    public static byte[] getExpirationDateUsingMonths(int monthsFromNow){
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MONTH, monthsFromNow);
         Date expirationDate = calendar.getTime();
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        return dateFormat.format(expirationDate);
+        return dateFormat.format(expirationDate).getBytes();
     }
 
     public static byte[] sign(byte[] data, RSAPrivateKey key) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException{

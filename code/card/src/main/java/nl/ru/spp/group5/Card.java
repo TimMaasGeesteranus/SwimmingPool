@@ -60,7 +60,8 @@ public class Card extends Applet {
     // BUY TICKET
     private final BuyTicket buyTicket;
     private static final byte INS_REQUEST_SEASON_TICKET_CERTIFICATE = (byte) 0x09;
-    private static final byte INS_SEND_SEASON_TICKET_CERTIFICATE = (byte) 0x0A;
+    private static final byte INS_SAVE_SEASON_TICKET_CERTIFICATE_FIRST_HALF = (byte) 0x0A;
+    private static final byte INS_SAVE_SEASON_TICKET_CERTIFICATE_SECOND_HALF = (byte) 0x1A;
     private static final byte INS_SET_ENTRIES = (byte) 0x0C;
     protected byte[] seasonTicketCertificate;
     protected byte entryCounter;
@@ -146,8 +147,11 @@ public class Card extends Applet {
             case INS_REQUEST_SEASON_TICKET_CERTIFICATE:
                 buyTicket.requestSeasonTicketCertificate(apdu);
                 break;
-            case INS_SEND_SEASON_TICKET_CERTIFICATE:
-                buyTicket.sendSeasonTicketCertificate(apdu);
+            case INS_SAVE_SEASON_TICKET_CERTIFICATE_FIRST_HALF:
+                buyTicket.saveSeasonTicketCertificateFirstHalf(apdu);
+                break;
+            case INS_SAVE_SEASON_TICKET_CERTIFICATE_SECOND_HALF:
+                buyTicket.saveSeasonTicketCertificateSecondHalf(apdu);
                 break;
             case INS_CHECK_ENTRIES:
                 checkEntries(apdu);

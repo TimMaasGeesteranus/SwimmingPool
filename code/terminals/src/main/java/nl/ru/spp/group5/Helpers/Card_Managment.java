@@ -5,23 +5,10 @@ import javax.smartcardio.*;
 import static nl.ru.spp.group5.Helpers.Utils.*;
 
 import java.security.*;
+import java.security.interfaces.RSAPrivateKey;
 import java.util.Base64;
 
 public class Card_Managment {
-
-    // Dummy private key for signing the certificate
-    private static final PrivateKey PRIVATE_KEY = generatePrivateKey();
-
-    private static PrivateKey generatePrivateKey() {
-        try {
-            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-            keyPairGenerator.initialize(2048);
-            KeyPair keyPair = keyPairGenerator.generateKeyPair();
-            return keyPair.getPrivate();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Failed to generate private key", e);
-        }
-    }
 
     public Card_Managment() {
         // Initialization code here
@@ -59,43 +46,6 @@ public class Card_Managment {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
-        }
-    }
-
-    public void rechargeCard(CardChannel channel, String cardId, String type) {
-        if (!Backend.isCardValid(cardId)) {
-            System.out.println("Card is not valid.");
-            return;
-        }
-
-        if (!mutualAuthenticate(cardId)) {
-            System.out.println("Authentication failed.");
-            return;
-        }
-
-        if (type.equals("season")) {
-            byte[] newCertificate = generateSeasonTicketCertificate(cardId);
-            boolean success = sendSeasonTicketCertificate(channel, cardId, newCertificate);
-            if (success) {
-                System.out.println("Season ticket recharged successfully.");
-            } else {
-                System.out.println("Failed to recharge the season ticket.");
-            }
-        } else if (type.equals("entry")) {
-            int currentEntries = Backend.getCardEntries(cardId);
-            int newEntries = currentEntries + 10;
-            if (newEntries > 999) {
-                System.out.println("Cannot recharge: entry limit exceeded.");
-                return;
-            }
-            boolean success = setEntries(channel, cardId, newEntries);
-            if (success) {
-                System.out.println("10-entry ticket recharged successfully.");
-            } else {
-                System.out.println("Failed to recharge the 10-entry ticket.");
-            }
-        } else {
-            System.out.println("Unknown card type.");
         }
     }
 
@@ -166,9 +116,20 @@ public class Card_Managment {
         return true;
     }
 
-    public static int checkEntries(String cardId) {
-        // TODO get entries from card not from backend
-        return Backend.getCardEntries(cardId);
+    public static int getEntriesFromCard(CardChannel channel) {
+        try {
+            CommandAPDU apdu = new CommandAPDU(0x00, 0x1B, 0x00, 0x00);
+
+            ResponseAPDU response = channel.transmit(apdu);
+            if (response.getSW() != 0x9000) {
+                throw new CardException("Failed to set entries. Response: " + Integer.toHexString(response.getSW()));
+            }
+
+            return (response.getData()[0] & 0xFF);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 10;
+        } 
     }
 
     public static boolean setEntries(CardChannel channel, String cardId, int entries) {
@@ -243,28 +204,40 @@ public class Card_Managment {
         return sb.toString();
     }
 
-    public static byte[] generateSeasonTicketCertificate(String cardId) {
-        try {
-            String expiryDate = Utils.getExpirationDateUsingMonths(3);          
-            String data = "CardID:" + cardId + ";ExpiryDate:" + expiryDate;
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(PRIVATE_KEY);
-            signature.update(data.getBytes());
-            byte[] signedData = signature.sign();
+    public static byte[] generateSeasonTicketCertificate(byte[] cardID, RSAPrivateKey terminalPrivKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException{
+        byte[] cardExpirationDate = getExpirationDateUsingMonths(3);
 
-            // Save expiry date in the backend
-            Backend.setCardExpiryDate(cardId, expiryDate);
-
-            return signedData;
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-            e.printStackTrace();
-            return null;
-        }
+        // Concatenate cardID, cardExpirationdate
+        byte[] dataToSign = new byte[CARD_ID_LENGTH + CARD_EXP_DATE_LENGTH];
+        System.arraycopy(cardID, 0, dataToSign, 0, CARD_ID_LENGTH);
+        System.arraycopy(cardExpirationDate, 0, dataToSign, CARD_ID_LENGTH, CARD_EXP_DATE_LENGTH);
+        
+        // Sign and return
+        return sign(dataToSign, terminalPrivKey);
     }
 
-    public static boolean sendSeasonTicketCertificate(CardChannel channel, String cardId, byte[] certificateBytes) {
+    // public static byte[] generateSeasonTicketCertificateOLD(String cardId) { //TODO remove
+    //     try {
+    //         String expiryDate = Utils.getExpirationDateUsingMonths(3);          
+    //         String data = "CardID:" + cardId + ";ExpiryDate:" + expiryDate;
+    //         Signature signature = Signature.getInstance("SHA256withRSA");
+    //         signature.initSign(PRIVATE_KEY);
+    //         signature.update(data.getBytes());
+    //         byte[] signedData = signature.sign();
+
+    //         // Save expiry date in the backend
+    //         Backend.setCardExpiryDate(cardId, expiryDate);
+
+    //         return signedData;
+    //     } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+    //         e.printStackTrace();
+    //         return null;
+    //     }
+    // }
+
+    public static boolean sendSeasonTicketCertificate(CardChannel channel, byte[] certificate) {
         try {
-            if (certificateBytes.length != CERT_LENGTH) {
+            if (certificate.length != CERT_LENGTH) {
                 System.err.println("Certificate length is not 256 bytes.");
                 return false;
             }
@@ -272,8 +245,8 @@ public class Card_Managment {
             // Split certificate into two parts
             byte[] firstHalf = new byte[CERT_LENGTH/2];
             byte[] secondHalf = new byte[CERT_LENGTH/2];
-            System.arraycopy(certificateBytes, 0, firstHalf, 0, CERT_LENGTH/2);
-            System.arraycopy(certificateBytes, CERT_LENGTH/2, secondHalf, 0, CERT_LENGTH/2);
+            System.arraycopy(certificate, 0, firstHalf, 0, CERT_LENGTH/2);
+            System.arraycopy(certificate, CERT_LENGTH/2, secondHalf, 0, CERT_LENGTH/2);
 
             // Send first half
             CommandAPDU sendFirstHalfCommand = new CommandAPDU(0x00, 0x0A, 0x00, 0x00, firstHalf);
@@ -284,7 +257,7 @@ public class Card_Managment {
             }
 
             // Send second half
-            CommandAPDU sendSecondHalfCommand = new CommandAPDU(0x00, 0x0A, 0x00, 0x01, secondHalf);
+            CommandAPDU sendSecondHalfCommand = new CommandAPDU(0x00, 0x1A, 0x00, 0x00, secondHalf);
             response = channel.transmit(sendSecondHalfCommand);
 
             if (response.getSW() != 0x9000) {
