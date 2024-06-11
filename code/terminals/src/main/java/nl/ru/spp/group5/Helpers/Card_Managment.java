@@ -113,16 +113,28 @@ public class Card_Managment {
         }
     }
 
-    public static byte[] generateSeasonTicketCertificate(byte[] cardID, RSAPrivateKey terminalPrivKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException{
-        byte[] cardExpirationDate = getExpirationDateUsingMonths(3);
-
+    public static byte[] generateSeasonTicketCertificate(byte[] cardID, byte[] seasonExpiryDate, RSAPrivateKey terminalPrivKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException{ 
         // Concatenate cardID, cardExpirationdate
         byte[] dataToSign = new byte[CARD_ID_LENGTH + CARD_EXP_DATE_LENGTH];
         System.arraycopy(cardID, 0, dataToSign, 0, CARD_ID_LENGTH);
-        System.arraycopy(cardExpirationDate, 0, dataToSign, CARD_ID_LENGTH, CARD_EXP_DATE_LENGTH);
-        
+        System.arraycopy(seasonExpiryDate, 0, dataToSign, CARD_ID_LENGTH, CARD_EXP_DATE_LENGTH);
         // Sign and return
         return sign(dataToSign, terminalPrivKey);
+    }
+
+    public static void sendSeasonExpiryDateToCard(CardChannel channel, byte[] seasonExpiryDate){
+        try {
+            CommandAPDU command = new CommandAPDU(0x00, 0x2A, 0x00, 0x00, seasonExpiryDate);
+
+            ResponseAPDU response = channel.transmit(command);
+            if (response.getSW() != 0x9000) {
+                throw new CardException("Failed to set season ticket expiry date. Response: " + Integer.toHexString(response.getSW()));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }    
+
     }
 
     public static boolean sendSeasonTicketCertificate(CardChannel channel, byte[] certificate) {

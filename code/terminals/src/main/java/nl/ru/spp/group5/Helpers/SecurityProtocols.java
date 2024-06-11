@@ -102,7 +102,7 @@ public class SecurityProtocols {
         return response.getData();
     }
 
-    private static byte[] getCardExpirationDate(CardChannel channel) throws CardException{
+    public static byte[] getCardExpirationDate(CardChannel channel) throws CardException{
         // Sending ID request
         CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x11, 0x00, 0x00);
         ResponseAPDU response = channel.transmit(apdu);

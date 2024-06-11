@@ -61,10 +61,13 @@ public class Card extends Applet {
     private static final byte INS_REQUEST_SEASON_TICKET_CERTIFICATE = (byte) 0x09;
     private static final byte INS_SAVE_SEASON_TICKET_CERTIFICATE_FIRST_HALF = (byte) 0x0A;
     private static final byte INS_SAVE_SEASON_TICKET_CERTIFICATE_SECOND_HALF = (byte) 0x1A;
+    private static final byte INS_SAVE_SEASON_EXPIRY_DATE = (byte) 0x2A;
+    private static final byte INS_GET_SEASON_EXPIRY_DATE = (byte) 0x2B;
     private static final byte INS_SET_ENTRIES = (byte) 0x0C;
     private static final byte INS_GET_ENTRIES = (byte) 0x1B;
     protected byte[] seasonTicketCertificate;
     protected byte entryCounter;
+    protected byte[] seasonTicketExpirationDate;
 
 
 
@@ -87,6 +90,7 @@ public class Card extends Applet {
         kCard = new byte[Consts.KEY_LENGTH];
         cardID = new byte[Consts.CARD_ID_LENGTH];
         cardExpirationDate = new byte[Consts.CARD_EXP_DATE_LENGTH];
+        seasonTicketExpirationDate = new byte[Consts.CARD_EXP_DATE_LENGTH];
         cardCertificate = new byte[Consts.CERT_LENGTH];
         isIssued = false;
         x2 = new byte[Consts.KEY_LENGTH];
@@ -152,6 +156,12 @@ public class Card extends Applet {
                 break;
             case INS_SAVE_SEASON_TICKET_CERTIFICATE_SECOND_HALF:
                 buyTicket.saveSeasonTicketCertificateSecondHalf(apdu);
+                break;
+            case INS_SAVE_SEASON_EXPIRY_DATE:
+                buyTicket.saveSeasonExpiryDate(apdu);
+                break;
+            case INS_GET_SEASON_EXPIRY_DATE:
+                buyTicket.getSeasonExpiryDate(apdu);
                 break;
             case INS_SET_ENTRIES:
                 buyTicket.setEntries(apdu);

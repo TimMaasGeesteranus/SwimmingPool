@@ -1,9 +1,12 @@
 package nl.ru.spp.group5;
 
+import static nl.ru.spp.group5.Helpers.Utils.*;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -57,13 +60,12 @@ public class AccessGateTerminal extends Terminal {
             // If card has season ticket, check certificate
             byte[] cardSeasonCert = getSeasonCertFromCard(channel);
             if(cardSeasonCert != null){
-                if(isCertValid(cardSeasonCert)){
+                if(isCertValid(channel, cardSeasonCert)){
                     openGate();
                 }
             }
-
             // Check if card has entry
-            if(cardHasEntry()){
+            else if(cardHasEntry()){
                 openGate();
             }
         } catch (Exception e) {
@@ -72,7 +74,6 @@ public class AccessGateTerminal extends Terminal {
         denyAccess();
     }
 
-    //TODO seasoncert on card is probably incorrect because it wont return like it should
     private static byte[] getSeasonCertFromCard(CardChannel channel) throws CardException{  
         // Sending cert request
         CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x26, 0x00, 0x00);
@@ -87,8 +88,20 @@ public class AccessGateTerminal extends Terminal {
         return response.getData();
     }
 
-    private boolean isCertValid(byte[] cardSeasonCert){
-        return true;
+    private boolean isCertValid(CardChannel channel, byte[] cardSeasonCert) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException{        
+        // Concatenate cardID, cardExpirationdate and pubKeyCard so cert can be validated
+        byte[] data = new byte[CARD_ID_LENGTH + CARD_EXP_DATE_LENGTH];
+        byte[] cardID = SecurityProtocols.getCardID(channel);
+        byte[] cardExpirationDate = getSeasonCertExpirationDate(channel);
+
+        System.arraycopy(cardID, 0, data, 0, CARD_ID_LENGTH);
+        System.arraycopy(cardExpirationDate, 0, data, CARD_ID_LENGTH, CARD_EXP_DATE_LENGTH);
+
+        Signature sig = Signature.getInstance("SHA256withRSA");
+        sig.initVerify(TERMINAL_PUB_KEY);
+        sig.update(data);
+
+        return sig.verify(cardSeasonCert);
     }
 
     private boolean cardHasEntry(){
@@ -106,5 +119,18 @@ public class AccessGateTerminal extends Terminal {
     public void denyAccess() {
         logger.warning("Access denied.");
         System.out.println("Access denied...");
+    }
+
+    public byte[] getSeasonCertExpirationDate(CardChannel channel) throws CardException{
+        // Sending ID request
+        CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x2B, 0x00, 0x00);
+        ResponseAPDU response = channel.transmit(apdu);
+
+        // Verifying response
+        if (response.getSW() != 0x9000){
+            throw new CardException("something went wrong with getting season cert expirydate");
+        }
+
+        return response.getData();
     }
 }

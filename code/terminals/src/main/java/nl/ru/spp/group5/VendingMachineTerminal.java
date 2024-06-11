@@ -119,11 +119,16 @@ public class VendingMachineTerminal extends Terminal {
             }
         }
 
-        byte[] newCertificate = Card_Managment.generateSeasonTicketCertificate(cardID, terminalPrivKey);
+        // Generate new seasonExpiryDate
+        byte[] seasonExpiryDate = Utils.getExpirationDateUsingMonths(3);
+
+
+        byte[] newCertificate = Card_Managment.generateSeasonTicketCertificate(cardID, seasonExpiryDate, terminalPrivKey);
         if (newCertificate == null) {
             System.out.println("Failed to generate new season ticket certificate.");
             return;
         }
+        Card_Managment.sendSeasonExpiryDateToCard(channel, seasonExpiryDate);
 
         boolean success = Card_Managment.sendSeasonTicketCertificate(channel, newCertificate);
         if (success) {
