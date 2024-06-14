@@ -48,38 +48,27 @@ public class Auth {
     }
 
     void calculatex1(APDU apdu){
-        byte[] nonce1 = new byte[Consts.KEY_LENGTH]; // nonce will be padded with zeroes to match key_length
-
         // Get nonce from apdu
         byte[] buffer = apdu.getBuffer();
-        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, nonce1, (short) 0, (short) Consts.NONCE_LENGTH);
+        Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.nonce1, (short) 0, (short) Consts.NONCE_LENGTH);
 
         // Encrypt nonce using key
-        Cipher cipher = Cipher.getInstance(Cipher.ALG_RSA_NOPAD, false);
-        cipher.init(card.privKeyCard, Cipher.MODE_ENCRYPT);
-        cipher.doFinal(nonce1, (short) 0, (short) Consts.KEY_LENGTH, buffer, (short) 0);
+        card.cipher.init(card.privKeyCard, Cipher.MODE_ENCRYPT);
+        card.cipher.doFinal(card.nonce1, (short) 0, (short) Consts.KEY_LENGTH, buffer, (short) 0);
 
         // Send encrypted nonce
         apdu.setOutgoingAndSend((short)0, (short) Consts.KEY_LENGTH);    
     }
 
     void getNonce2(APDU apdu){
-        card.nonce2 = generateNonce();
+        // generate nonce
+        card.random.generateData(card.nonce2, (short) 0, Consts.NONCE_LENGTH);
 
         //Prepare data
         byte[] buffer = apdu.getBuffer();
         Util.arrayCopy(card.nonce2, (short) 0, buffer, (short) 0, (short) Consts.NONCE_LENGTH);
 
         apdu.setOutgoingAndSend((short) 0, (short) Consts.NONCE_LENGTH);
-    }
-
-    byte[] generateNonce(){
-        byte[] nonce = new byte[Consts.NONCE_LENGTH];
-
-        RandomData random = RandomData.getInstance(RandomData.ALG_SECURE_RANDOM);
-        random.generateData(nonce, (short) 0, Consts.NONCE_LENGTH);
-
-        return nonce;
     }
 
     void authenticateTerminalFirstHalf(APDU apdu){
@@ -96,18 +85,15 @@ public class Auth {
         Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.x2, (short) (Consts.KEY_LENGTH / 2), (short) (Consts.KEY_LENGTH / 2));
 
         // Decrypt x2 using key
-        Cipher cipher = Cipher.getInstance(Cipher.ALG_RSA_NOPAD, false);
-        cipher.init(card.pubKeyVending, Cipher.MODE_DECRYPT);
+        card.cipher.init(card.pubKeyVending, Cipher.MODE_DECRYPT);
 
-        byte[] n2 = new byte[Consts.KEY_LENGTH];
-        cipher.doFinal(card.x2, (short) 0, (short) Consts.KEY_LENGTH, n2, (short) 0);
+        card.cipher.doFinal(card.x2, (short) 0, (short) Consts.KEY_LENGTH, card.n2, (short) 0);
 
         // Prepare padded nonce
-        byte[] paddedNonce = new byte[Consts.KEY_LENGTH];
-        Util.arrayCopy(card.nonce2, (short) 0, paddedNonce, (short) 0, (short) Consts.NONCE_LENGTH);
+        Util.arrayCopy(card.nonce2, (short) 0, card.paddedNonce2, (short) 0, (short) Consts.NONCE_LENGTH);
 
         // Compare n2 with paddedNonce
-        if (isEqual(n2, paddedNonce)) {
+        if (isEqual(card.n2, card.paddedNonce2)) {
             apdu.setOutgoingAndSend((short)0, (short)0); // Terminal is now authenticated
         } else {
             ISOException.throwIt((short) 0x6F02); // Terminal not authenticated
