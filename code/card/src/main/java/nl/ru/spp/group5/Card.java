@@ -1,5 +1,6 @@
 package nl.ru.spp.group5;
 
+import javacardx.crypto.Cipher;
 import javacard.framework.*;
 import javacard.security.*;
 
@@ -24,6 +25,11 @@ public class Card extends Applet {
     private static final byte INS_AUTHENTICATE_TERMINAL_SECOND_HALF = (byte) 0x16;
     protected byte[] x2;
     protected byte[] nonce2;
+    protected byte[] paddedNonce2;
+    protected byte[] nonce1;
+    protected byte[] n2;
+    protected Cipher cipher;
+    protected RandomData random;
 
     // ISSUE CARD
     private final Init init;
@@ -74,7 +80,13 @@ public class Card extends Applet {
         isIssued = false;
         x2 = new byte[Consts.KEY_LENGTH];
         nonce2 = new byte[Consts.NONCE_LENGTH];
+        nonce1 = new byte[Consts.KEY_LENGTH];
+        paddedNonce2 = new byte[Consts.KEY_LENGTH];
+        n2 = new byte[Consts.KEY_LENGTH];
         pubKeyVendingBytes = new byte[Consts.KEY_LENGTH];
+        cipher = Cipher.getInstance(Cipher.ALG_RSA_NOPAD, false);
+        random = RandomData.getInstance(RandomData.ALG_SECURE_RANDOM);
+
 
         init = new Init(this);
         auth = new Auth(this);

@@ -33,22 +33,21 @@ public class SecurityProtocols {
 
     // Method for mutual authentication between card and terminal/vending machine
     public static boolean mutualAuthentication(CardChannel channel, boolean isGate, RSAPublicKey pubKeyVending, RSAPrivateKey privKeyVending) throws BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException{
-        return true;
-        // try{
-        //     return authenticate(channel, isGate, pubKeyVending, privKeyVending);
-        // } catch (Exception e){
-        //     try{
-        //         return authenticate(channel, isGate, pubKeyVending, privKeyVending);
-        //     } catch (Exception e2){
-        //         try{
-        //             return authenticate(channel, isGate, pubKeyVending, privKeyVending);
-        //         } catch (Exception e3){
-        //             System.out.println("Could not authenticate: " + e3.getMessage());
-        //             System.out.println("");
-        //             return false;
-        //         }
-        //     }
-        // }
+        try{
+            return authenticate(channel, isGate, pubKeyVending, privKeyVending);
+        } catch (Exception e){
+            try{
+                return authenticate(channel, isGate, pubKeyVending, privKeyVending);
+            } catch (Exception e2){
+                try{
+                    return authenticate(channel, isGate, pubKeyVending, privKeyVending);
+                } catch (Exception e3){
+                    System.out.println("Could not authenticate: " + e3.getMessage());
+                    System.out.println("");
+                    return false;
+                }
+            }
+        }
     }
 
     private static boolean authenticate(CardChannel channel, boolean isGate, RSAPublicKey pubKeyVending, RSAPrivateKey privKeyVending) throws BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException{
@@ -155,6 +154,8 @@ public class SecurityProtocols {
 
         // Sending nonce
         CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x13, 0x00, 0x00, nonce1);
+
+        System.out.println("nonce1 length: " + nonce1.length);
 
         // Verifying response
         ResponseAPDU response = channel.transmit(apdu);
