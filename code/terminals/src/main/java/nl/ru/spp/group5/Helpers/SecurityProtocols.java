@@ -155,8 +155,6 @@ public class SecurityProtocols {
         // Sending nonce
         CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x13, 0x00, 0x00, nonce1);
 
-        System.out.println("nonce1 length: " + nonce1.length);
-
         // Verifying response
         ResponseAPDU response = channel.transmit(apdu);
         if (response.getSW() != 0x9000){
