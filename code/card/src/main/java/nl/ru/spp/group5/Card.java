@@ -68,6 +68,12 @@ public class Card extends Applet {
     private static final byte INS_BLOCK_CARD = (byte) 0x07;
     private boolean isBlocked;
 
+    // PROTECTED MESSAGING
+    private final MessageProtected messageProtected;
+    private static final byte INS_SET_TEMPORARY_SIGNATURE_FIRST_HALF = (byte) 0x1C;
+    private static final byte INS_SET_TEMPORARY_SIGNATURE_SECOND_HALF = (byte) 0x1D;
+    protected byte[] temp_signature;
+
     private Card() {
         cardState = STATE_INITIAL;
         entryCounter = 0;
@@ -86,12 +92,13 @@ public class Card extends Applet {
         pubKeyVendingBytes = new byte[Consts.KEY_LENGTH];
         cipher = Cipher.getInstance(Cipher.ALG_RSA_NOPAD, false);
         random = RandomData.getInstance(RandomData.ALG_SECURE_RANDOM);
-
+        temp_signature = new byte[Consts.KEY_LENGTH];
 
         init = new Init(this);
         auth = new Auth(this);
         access = new Access(this);
         buyTicket = new BuyTicket(this);
+        messageProtected = new MessageProtected(this);
 
         register();
     }
@@ -177,6 +184,12 @@ public class Card extends Applet {
                 break;
             case INS_ACCESS_GET_SEASON_CERT:
                 access.returnSeasonCert(apdu);
+                break;
+            case INS_SET_TEMPORARY_SIGNATURE_FIRST_HALF:
+                messageProtected.setTemporarySignatureFirstHalf(apdu);
+                break;
+            case INS_SET_TEMPORARY_SIGNATURE_SECOND_HALF:
+                messageProtected.setTemporarySignatureSecondHalf(apdu);
                 break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);

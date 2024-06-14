@@ -1,5 +1,6 @@
 package nl.ru.spp.group5;
 
+import static nl.ru.spp.group5.Helpers.Utils.NONCE_LENGTH;
 import static nl.ru.spp.group5.Helpers.Utils.readPrivKey;
 import static nl.ru.spp.group5.Helpers.Utils.readPubKey;
 
@@ -22,11 +23,17 @@ import nl.ru.spp.group5.Helpers.Utils;
 public abstract class Terminal{
     protected final RSAPublicKey TERMINAL_PUB_KEY;
     protected final RSAPrivateKey TERMINAL_PRIV_KEY;
+    public static byte counter;
+    public static byte[] nonce1;
+    public static byte[] nonce2;
 
     Terminal() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         // Read private and public keys from files
         this.TERMINAL_PUB_KEY = readPubKey();
         this.TERMINAL_PRIV_KEY = readPrivKey();
+        counter = (byte) 0x00;
+        nonce1 = new byte[NONCE_LENGTH];
+        nonce2 = new byte[NONCE_LENGTH];
     }
 
     public void waitForCard() {

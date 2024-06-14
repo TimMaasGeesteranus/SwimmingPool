@@ -11,6 +11,8 @@ import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
+import nl.ru.spp.group5.Terminal;
+
 import static nl.ru.spp.group5.Helpers.Utils.*;
 
 import java.math.BigInteger;
@@ -85,6 +87,8 @@ public class SecurityProtocols {
 
         calculatex2AndSend(channel, privKeyVending, nonce2);
 
+        Terminal.nonce1 = nonce1;
+        Terminal.nonce2 = nonce2;
         return true; 
     }
 

@@ -157,4 +157,48 @@ public class Card_Managment {
             return false;
         }
     }
+
+    public static void signMessageAndSend(CardChannel channel, byte[] message, byte[] nonce1, byte[] nonce2, byte counter, RSAPrivateKey privKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException{
+        byte[] signature = signMessage(message, nonce1, nonce2, counter, privKey);
+
+        byte[] signatureFirstHalf = new byte[signature.length/2];
+        byte[] signatureSecondHalf = new byte[signature.length/2];
+        System.arraycopy(signature, 0, signatureFirstHalf, 0, signature.length/2);
+        System.arraycopy(signature, signature.length/2, signatureSecondHalf, 0, signature.length/2);
+
+        sendSignedMessageFirstHalf(channel, signatureFirstHalf);
+        sendSignedMessageSecondHalf(channel, signatureSecondHalf);
+    }
+
+    public static byte[] signMessage(byte[] message, byte[] nonce1, byte[] nonce2, byte counter, RSAPrivateKey privKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException{
+        byte[] data = new byte[message.length + nonce1.length + nonce2.length + 1];
+        System.arraycopy(message, 0, data, 0, message.length);
+        System.arraycopy(nonce1, 0, data, message.length, nonce1.length);
+        System.arraycopy(nonce2, 0, data, message.length+nonce1.length, nonce2.length);
+        data[message.length + nonce1.length + nonce2.length] = counter;
+
+        return Utils.sign(data, privKey);
+    }
+
+    public static void sendSignedMessageFirstHalf(CardChannel channel, byte[] signature) throws CardException{
+        // Sending signature
+        CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x1C, 0x00, 0x00, signature);
+        ResponseAPDU response = channel.transmit(apdu);
+
+        // Verifying response
+        if (response.getSW() != 0x9000){
+            throw new CardException("something went wrong with sending the signed message");
+        }
+    }
+
+    public static void sendSignedMessageSecondHalf(CardChannel channel, byte[] signature) throws CardException{
+        // Sending signature
+        CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x1D, 0x00, 0x00, signature);
+        ResponseAPDU response = channel.transmit(apdu);
+
+        // Verifying response
+        if (response.getSW() != 0x9000){
+            throw new CardException("something went wrong with sending the signed message");
+        }
+    }
 }

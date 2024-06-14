@@ -2,6 +2,7 @@ package nl.ru.spp.group5;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
@@ -65,12 +66,24 @@ public class VendingMachineTerminal extends Terminal {
                 case "5":
                     SecurityProtocols.mutualAuthentication(channel, false, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
                     break;
+                case "6":
+                    testProtectedMessage(channel, TERMINAL_PRIV_KEY);
+                    break;
                 default:
                     Utils.clearScreen();
                     System.out.println("\n!! Invalid input. Please enter a number between 1 and 4 !! \n");
                     break;
             }
         }
+    }
+
+    private static void testProtectedMessage(CardChannel channel, RSAPrivateKey terminalPrivKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException{
+        String message = "Hello world";
+        byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
+
+        Card_Managment.signMessageAndSend(channel, messageBytes, nonce1, nonce2, counter, terminalPrivKey);
+
+        System.out.println("success");
     }
 
     public static void buySeasonTicket(CardChannel channel, RSAPublicKey terminalPubKey, RSAPrivateKey terminalPrivKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, CardException {
