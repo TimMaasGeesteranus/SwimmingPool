@@ -100,6 +100,9 @@ public class Auth {
         // Prepare padded nonce
         Util.arrayCopy(card.nonce2, (short) 0, card.paddedNonce2, (short) 0, (short) Consts.NONCE_LENGTH);
 
+        // Reset counter
+        card.counter = 0;
+
         // Compare n2 with paddedNonce
         if (isEqual(card.n2, card.paddedNonce2)) {
             apdu.setOutgoingAndSend((short)0, (short)0); // Terminal is now authenticated

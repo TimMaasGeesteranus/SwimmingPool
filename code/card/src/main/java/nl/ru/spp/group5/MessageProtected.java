@@ -42,6 +42,9 @@ public class MessageProtected {
             return;  
         }
 
+        // Update counter
+        card.counter++;
+
         // Create s2
         fillData(card.m2);
         card.signature.init(card.privKeyCard, Signature.MODE_SIGN);
@@ -51,6 +54,9 @@ public class MessageProtected {
         // Send s2
         byte[] buffer = apdu.getBuffer();
         Util.arrayCopy(card.s2, (short) 0, buffer, (short) 0, (short) Consts.KEY_LENGTH);
+
+        // Update counter
+        card.counter++;
 
         // Send expiration date
         apdu.setOutgoingAndSend((short)0, (short) Consts.KEY_LENGTH); 

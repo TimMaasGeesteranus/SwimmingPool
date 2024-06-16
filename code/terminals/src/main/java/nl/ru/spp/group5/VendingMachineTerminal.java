@@ -67,7 +67,7 @@ public class VendingMachineTerminal extends Terminal {
                     SecurityProtocols.mutualAuthentication(channel, false, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
                     break;
                 case "6":
-                    System.out.println(new String(SecurityProtocols.getCardIDProtected(channel, TERMINAL_PRIV_KEY, SecurityProtocols.getCardPubKey(channel), nonce1, nonce2, counter)));
+                    System.out.println(new String(SecurityProtocols.getCardIDProtected(channel, TERMINAL_PRIV_KEY, SecurityProtocols.getCardPubKey(channel), nonce1, nonce2)));
                     break;
                 default:
                     Utils.clearScreen();
@@ -96,7 +96,8 @@ public class VendingMachineTerminal extends Terminal {
             return;
         }
 
-        byte[] currentCertificate = Card_Managment.requestSeasonTicketCertificate(channel);
+        //byte[] currentCertificate = Card_Managment.requestSeasonTicketCertificate(channel);
+        byte[] currentCertificate = SecurityProtocols.requestSeasonTicketCertificateProtected(channel, terminalPrivKey, SecurityProtocols.getCardPubKey(channel), nonce1, nonce2);
 
         // Check if the certificate is valid (not all zeros)
         boolean isCertificateValid = !Utils.isAllZeros(currentCertificate);

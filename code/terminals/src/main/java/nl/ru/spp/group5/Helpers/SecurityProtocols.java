@@ -90,37 +90,48 @@ public class SecurityProtocols {
 
         Terminal.nonce1 = nonce1;
         Terminal.nonce2 = nonce2;
+        Terminal.counter = 0;
         return true; 
     }
 
-    public static byte[] getCardIDProtected(CardChannel channel, RSAPrivateKey terminalPrivKey, byte[] cardPubKey, byte[] nonce1, byte[] nonce2, byte counter) throws SignatureException, CardException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
+
+    public static byte[] getCardIDProtected(CardChannel channel, RSAPrivateKey terminalPrivKey, byte[] cardPubKey, byte[] nonce1, byte[] nonce2) throws SignatureException, CardException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
+        doFirstHalfProtected(new byte[] {(byte) 0x10}, channel, nonce1, nonce2, terminalPrivKey);
+        byte[] cardID = getCardID(channel);
+        return doSecondHalfProtected(channel, cardID, nonce1, nonce2, cardPubKey);        
+    }
+
+    public static byte[] requestSeasonTicketCertificateProtected(CardChannel channel, RSAPrivateKey terminalPrivKey, byte[] cardPubKey, byte[] nonce1, byte[] nonce2) throws SignatureException, CardException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
+        doFirstHalfProtected(new byte[] {(byte) 0x09}, channel, nonce1, nonce2, terminalPrivKey);
+        byte[] cert = Card_Managment.requestSeasonTicketCertificate(channel);
+        return doSecondHalfProtected(channel, cert, nonce1, nonce2, cardPubKey);        
+    }
+
+    private static void doFirstHalfProtected(byte[] ins, CardChannel channel, byte[] nonce1, byte[] nonce2, RSAPrivateKey terminalPrivKey) throws SignatureException, CardException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
         // Create message
         byte[] m1 = new byte[KEY_LENGTH];
-        m1[0] = 0x10;
+        System.arraycopy(ins, 0, m1, 0, ins.length);
 
         // Sign and send message
-        Card_Managment.signMessageAndSend(channel, m1, nonce1, nonce2, counter, terminalPrivKey);
+        Card_Managment.signMessageAndSend(channel, m1, nonce1, nonce2, Terminal.counter, terminalPrivKey);
 
         // Update counter
+        Terminal.counter++;
+    }
 
-        // Get message2 from card
+    private static byte[] doSecondHalfProtected(CardChannel channel, byte[] message, byte[] nonce1, byte[] nonce2, byte[] cardPubKey) throws SignatureException, CardException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
         byte[] m2 = new byte[KEY_LENGTH];
-        byte[] cardID = getCardID(channel);
-        System.arraycopy(cardID, 0, m2, 0, CARD_ID_LENGTH);
+        System.arraycopy(message, 0, m2, 0, message.length);
 
         // Get signed message from card
         byte[] s2 = Card_Managment.getSignedResponse(channel);
 
         // Create data object from m2
-        //byte[] data = new byte[m2.length + nonce1.length + nonce2.length + 1];
         byte[] data = new byte[289];
         System.arraycopy(m2, 0, data, 0, m2.length);
         System.arraycopy(nonce1, 0, data, m2.length, nonce1.length);
         System.arraycopy(nonce2, 0, data, m2.length+nonce1.length, nonce2.length);
-        data[m2.length + nonce1.length + nonce2.length] = counter;
-
-        System.out.println("m2 length " + m2.length);
-        System.out.println("data length " + data.length);
+        data[m2.length + nonce1.length + nonce2.length] = Terminal.counter;
         
         // Compare data and signed data
         if(!signatureValid(data, s2, cardPubKey)){
@@ -128,9 +139,9 @@ public class SecurityProtocols {
         }
 
         // Update counter
+        Terminal.counter++;
 
-        System.out.println("success");
-        return cardID;
+        return message;
     }
 
     public static boolean signatureValid(byte[] data, byte[] s2, byte[] cardPubKey) throws SignatureException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         

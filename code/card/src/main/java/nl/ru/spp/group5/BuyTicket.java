@@ -15,8 +15,15 @@ public class BuyTicket {
     }
 
     void requestSeasonTicketCertificate(APDU apdu){
+        // save m1
+        toZeroes(card.m1);
+        card.m1[0] = 0x09;
+
         byte[] buffer = apdu.getBuffer();
         Util.arrayCopy(card.seasonTicketCertificate, (short) 0, buffer, ISO7816.OFFSET_CDATA, Consts.CERT_LENGTH);
+
+        // save m2
+        Util.arrayCopy(card.seasonTicketCertificate, (short) 0, card.m2, (short) 0, (short) Consts.CERT_LENGTH);
 
         apdu.setOutgoingAndSend(ISO7816.OFFSET_CDATA, Consts.CERT_LENGTH);
     }
@@ -67,4 +74,9 @@ public class BuyTicket {
         apdu.setOutgoingAndSend((short)0, (short) Consts.CARD_EXP_DATE_LENGTH);    
     }
 
+    void toZeroes(byte[] data){
+        for (short i = 0; i < data.length; i++) {
+            data[i] = 0;
+        }   
+    }
 }
