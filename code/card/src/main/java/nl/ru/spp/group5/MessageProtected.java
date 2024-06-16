@@ -31,7 +31,7 @@ public class MessageProtected {
 
     void gets2(APDU apdu){
         // Fill data
-        fillData();
+        fillData(card.m1);
 
         // Setup signature
         card.signature.init(card.pubKeyVending, Signature.MODE_VERIFY);
@@ -42,10 +42,18 @@ public class MessageProtected {
             return;  
         }
 
+        // Create s2
+        fillData(card.m2);
+        card.signature.init(card.privKeyCard, Signature.MODE_SIGN);
+        card.signature.sign(card.data, (short) 0, (short) card.data.length, card.s2, (short) 0);
 
-        apdu.setOutgoingAndSend((short)0, (short)0);
 
+        // Send s2
+        byte[] buffer = apdu.getBuffer();
+        Util.arrayCopy(card.s2, (short) 0, buffer, (short) 0, (short) Consts.KEY_LENGTH);
 
+        // Send expiration date
+        apdu.setOutgoingAndSend((short)0, (short) Consts.KEY_LENGTH); 
     }
 
     boolean isEqual(byte[] array1, byte[] array2) {
@@ -66,11 +74,12 @@ public class MessageProtected {
         }   
     }
 
-    void fillData(){
-        Util.arrayCopy(card.m1, (short) 0, card.data, (short) 0, (short) Consts.KEY_LENGTH);
+    void fillData(byte[] message){
+        toZeroes(card.data);
+        Util.arrayCopy(message, (short) 0, card.data, (short) 0, (short) Consts.KEY_LENGTH);
         Util.arrayCopy(card.nonce1, (short) 0, card.data, (short) Consts.KEY_LENGTH, (short) Consts.NONCE_LENGTH);
         Util.arrayCopy(card.nonce2, (short) 0, card.data, (short) (Consts.KEY_LENGTH+Consts.NONCE_LENGTH), (short) Consts.NONCE_LENGTH);
-        card.data[(short) (card.m1.length + Consts.NONCE_LENGTH + Consts.NONCE_LENGTH)] = card.counter;
+        card.data[(short) (message.length + Consts.NONCE_LENGTH + Consts.NONCE_LENGTH)] = card.counter;
     }
 }
 

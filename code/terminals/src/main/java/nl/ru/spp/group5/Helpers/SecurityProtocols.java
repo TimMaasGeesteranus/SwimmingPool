@@ -103,26 +103,53 @@ public class SecurityProtocols {
 
         // Update counter
 
-        // Get data from card
-        byte[] m2 = getCardID(channel);
+        // Get message2 from card
+        byte[] m2 = new byte[KEY_LENGTH];
+        byte[] cardID = getCardID(channel);
+        System.arraycopy(cardID, 0, m2, 0, CARD_ID_LENGTH);
 
         // Get signed message from card
         byte[] s2 = Card_Managment.getSignedResponse(channel);
-        System.out.println("success getting s2!!");
-        System.out.println("s2 length " + s2.length);
+
+        // Create data object from m2
+        //byte[] data = new byte[m2.length + nonce1.length + nonce2.length + 1];
+        byte[] data = new byte[289];
+        System.arraycopy(m2, 0, data, 0, m2.length);
+        System.arraycopy(nonce1, 0, data, m2.length, nonce1.length);
+        System.arraycopy(nonce2, 0, data, m2.length+nonce1.length, nonce2.length);
+        data[m2.length + nonce1.length + nonce2.length] = counter;
+
+        System.out.println("m2 length " + m2.length);
+        System.out.println("data length " + data.length);
         
         // Compare data and signed data
-        if(!signatureValid(m2, s2, cardPubKey)){
+        if(!signatureValid(data, s2, cardPubKey)){
             throw new CardException("IF STATEMENT something went wrong with checking the signature for the protected message");
         }
 
         // Update counter
 
         System.out.println("success");
-        return m2;
+        return cardID;
     }
 
-    public static boolean signatureValid(byte[] m2, byte[] s2, byte[] cardPubKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
+    public static boolean signatureValid(byte[] data, byte[] s2, byte[] cardPubKey) throws SignatureException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
+        // Convert key to be used with Cipher
+        RSAPublicKeySpec spec = new RSAPublicKeySpec(new BigInteger(1, cardPubKey), BigInteger.valueOf(65537));
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PublicKey publicKey = keyFactory.generatePublic(spec);
+
+        // Setup Signature
+        //Signature signature = Signature.getInstance("SHA256withRSA");
+        Signature signature = Signature.getInstance("SHA1withRSA");
+
+        signature.initVerify(publicKey);
+        signature.update(data);
+
+        return signature.verify(s2);
+    }
+
+    public static boolean signatureValidOLD(byte[] m2, byte[] s2, byte[] cardPubKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
         // Convert key to be used with Cipher
         RSAPublicKeySpec spec = new RSAPublicKeySpec(new BigInteger(1, cardPubKey), BigInteger.valueOf(65537));
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
