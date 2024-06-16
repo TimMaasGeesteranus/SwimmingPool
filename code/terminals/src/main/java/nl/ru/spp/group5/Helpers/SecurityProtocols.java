@@ -16,6 +16,7 @@ import nl.ru.spp.group5.Terminal;
 import static nl.ru.spp.group5.Helpers.Utils.*;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyFactory;
@@ -92,6 +93,52 @@ public class SecurityProtocols {
         return true; 
     }
 
+    public static byte[] getCardIDProtected(CardChannel channel, RSAPrivateKey terminalPrivKey, byte[] cardPubKey, byte[] nonce1, byte[] nonce2, byte counter) throws SignatureException, CardException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
+        // Create message
+        byte[] m1 = new byte[KEY_LENGTH];
+        m1[0] = 0x10;
+
+        // Sign and send message
+        Card_Managment.signMessageAndSend(channel, m1, nonce1, nonce2, counter, terminalPrivKey);
+
+        // Update counter
+
+        // Get data from card
+        byte[] m2 = getCardID(channel);
+
+        // Get signed message from card
+        byte[] s2 = Card_Managment.getSignedResponse(channel);
+        System.out.println("success getting s2!!");
+        System.out.println("s2 length " + s2.length);
+        
+        // Compare data and signed data
+        if(!signatureValid(m2, s2, cardPubKey)){
+            throw new CardException("IF STATEMENT something went wrong with checking the signature for the protected message");
+        }
+
+        // Update counter
+
+        System.out.println("success");
+        return m2;
+    }
+
+    public static boolean signatureValid(byte[] m2, byte[] s2, byte[] cardPubKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
+        // Convert key to be used with Cipher
+        RSAPublicKeySpec spec = new RSAPublicKeySpec(new BigInteger(1, cardPubKey), BigInteger.valueOf(65537));
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PublicKey publicKey = keyFactory.generatePublic(spec);
+
+        // Setup cipher
+        Cipher cipher = Cipher.getInstance("RSA/ECB/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE, publicKey);
+
+        // Decrypt s2
+        byte[] decrypteds2 = cipher.doFinal(s2);
+
+        // Compare decrypted x1 and nonce1
+        return Arrays.equals(m2, decrypteds2);
+    }
+
     public static byte[] getCardID(CardChannel channel) throws CardException{
         // Sending ID request
         CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x10, 0x00, 0x00);
@@ -118,7 +165,7 @@ public class SecurityProtocols {
         return response.getData();
     }
 
-    private static byte[] getCardPubKey(CardChannel channel) throws CardException{
+    public static byte[] getCardPubKey(CardChannel channel) throws CardException{
         // Sending ID request
         CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x12, 0x00, 0x00);
         ResponseAPDU response = channel.transmit(apdu);

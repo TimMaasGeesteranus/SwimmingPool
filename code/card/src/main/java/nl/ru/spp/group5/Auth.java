@@ -21,9 +21,17 @@ public class Auth {
     }
 
     void returnID(APDU apdu){
-        // Prepare data
         byte[] buffer = apdu.getBuffer();
+
+        // save m1
+        toZeroes(card.m1);
+        card.m1[0] = 0x10;
+
+        // Prepare data
         Util.arrayCopy(card.cardID, (short) 0, buffer, (short) 0, (short) Consts.CARD_ID_LENGTH);
+
+        // save m2
+        Util.arrayCopy(card.cardID, (short) 0, card.m2, (short) 0, (short) Consts.CARD_ID_LENGTH);
 
         // Send ID
         apdu.setOutgoingAndSend((short)0, (short) Consts.CARD_ID_LENGTH);    
@@ -110,6 +118,12 @@ public class Auth {
             }
         }
         return true;
+    }
+
+    void toZeroes(byte[] data){
+        for (short i = 0; i < data.length; i++) {
+            data[i] = 0;
+        }   
     }
 
 }

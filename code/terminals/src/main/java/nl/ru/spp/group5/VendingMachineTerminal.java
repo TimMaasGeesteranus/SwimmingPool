@@ -67,7 +67,7 @@ public class VendingMachineTerminal extends Terminal {
                     SecurityProtocols.mutualAuthentication(channel, false, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
                     break;
                 case "6":
-                    testProtectedMessage(channel, TERMINAL_PRIV_KEY);
+                    System.out.println(new String(SecurityProtocols.getCardIDProtected(channel, TERMINAL_PRIV_KEY, SecurityProtocols.getCardPubKey(channel), nonce1, nonce2, counter)));
                     break;
                 default:
                     Utils.clearScreen();
@@ -75,15 +75,6 @@ public class VendingMachineTerminal extends Terminal {
                     break;
             }
         }
-    }
-
-    private static void testProtectedMessage(CardChannel channel, RSAPrivateKey terminalPrivKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException{
-        String message = "Hello world";
-        byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
-
-        Card_Managment.signMessageAndSend(channel, messageBytes, nonce1, nonce2, counter, terminalPrivKey);
-
-        System.out.println("success");
     }
 
     public static void buySeasonTicket(CardChannel channel, RSAPublicKey terminalPubKey, RSAPrivateKey terminalPrivKey) throws SignatureException, InvalidKeyException, NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, CardException {

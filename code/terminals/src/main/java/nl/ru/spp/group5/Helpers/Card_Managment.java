@@ -177,7 +177,7 @@ public class Card_Managment {
         System.arraycopy(nonce2, 0, data, message.length+nonce1.length, nonce2.length);
         data[message.length + nonce1.length + nonce2.length] = counter;
 
-        return Utils.sign(data, privKey);
+        return Utils.signWithSHA1(data, privKey);
     }
 
     public static void sendSignedMessageFirstHalf(CardChannel channel, byte[] signature) throws CardException{
@@ -200,5 +200,19 @@ public class Card_Managment {
         if (response.getSW() != 0x9000){
             throw new CardException("something went wrong with sending the signed message");
         }
+    }
+
+    public static byte[] getSignedResponse(CardChannel channel) throws CardException{
+        // Sending request for signed response
+        CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x1E, 0x00, 0x00);
+        ResponseAPDU response = channel.transmit(apdu);
+
+        // Verifying response
+        if (response.getSW() != 0x9000){
+            System.out.println(Integer.toHexString(response.getSW()));
+            throw new CardException("something went wrong with getting the signed response OOF");
+        }
+
+        return response.getData();
     }
 }
