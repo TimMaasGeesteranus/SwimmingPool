@@ -47,10 +47,6 @@ public class Card extends Applet {
     protected byte[] pubKeyVendingBytes;
     protected RSAPublicKey pubKeyVending;
 
-    // ACCESS POOL
-    private final Access access;
-    private static final byte INS_ACCESS_GET_SEASON_CERT = (byte) 0x26;
-
     // BUY TICKET
     private final BuyTicket buyTicket;
     private static final byte INS_REQUEST_SEASON_TICKET_CERTIFICATE = (byte) 0x09;
@@ -111,7 +107,6 @@ public class Card extends Applet {
 
         init = new Init(this);
         auth = new Auth(this);
-        access = new Access(this);
         buyTicket = new BuyTicket(this);
         messageProtected = new MessageProtected(this);
 
@@ -196,9 +191,6 @@ public class Card extends Applet {
                 break;
             case INS_AUTHENTICATE_TERMINAL_SECOND_HALF:
                 auth.authenticateTerminalSecondHalf(apdu);
-                break;
-            case INS_ACCESS_GET_SEASON_CERT:
-                access.returnSeasonCert(apdu);
                 break;
             case INS_SET_S1_FIRST_HALF:
                 messageProtected.sets1FirstHalf(apdu);

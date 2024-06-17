@@ -50,9 +50,17 @@ public class BuyTicket {
     }
 
     void getEntries(APDU apdu){
+        // save m1
+        toZeroes(card.m1);
+        card.m1[0] = 0x1B;
+
         // Prepare data
         byte[] buffer = apdu.getBuffer();
         Util.arrayCopy(new byte[] {card.entryCounter}, (short) 0, buffer, (short) 0, (short) 1);
+
+        // save m2
+        toZeroes(card.m2);
+        Util.arrayCopy(new byte[] {card.entryCounter}, (short) 0, card.m2, (short) 0, (short) 1);
 
         // Send ID
         apdu.setOutgoingAndSend((short)0, (short) 1);    

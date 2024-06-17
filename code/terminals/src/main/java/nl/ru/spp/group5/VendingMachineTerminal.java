@@ -165,7 +165,7 @@ public class VendingMachineTerminal extends Terminal {
             return;
         }
 
-        int currentEntries = Card_Managment.getEntriesFromCard(channel);
+        int currentEntries = SecurityProtocols.getEntriesFromCardProtected(channel, terminalPrivKey, SecurityProtocols.getCardPubKey(channel), nonce1, nonce2);
         if (currentEntries != 0) {
             System.out.println("Card still has " + currentEntries + " entries. Cannot issue a new 10-entry ticket.");
             System.out.println("");

@@ -11,6 +11,7 @@ import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 
+import nl.ru.spp.group5.AccessGateTerminal;
 import nl.ru.spp.group5.Terminal;
 
 import static nl.ru.spp.group5.Helpers.Utils.*;
@@ -120,6 +121,12 @@ public class SecurityProtocols {
     public static boolean setEntriesProtected(CardChannel channel, RSAPrivateKey terminalPrivKey, byte[] cardPubKey, byte[] nonce1, byte[] nonce2, String cardId, int entries) throws SignatureException, CardException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
         doFirstHalfProtected(new byte[] {(byte) 0x2A}, channel, nonce1, nonce2, terminalPrivKey);
         return Card_Managment.setEntries(channel, cardId, entries);
+    }
+
+    public static int getEntriesFromCardProtected(CardChannel channel, RSAPrivateKey terminalPrivKey, byte[] cardPubKey, byte[] nonce1, byte[] nonce2) throws SignatureException, CardException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
+        doFirstHalfProtected(new byte[] {(byte) 0x1B}, channel, nonce1, nonce2, terminalPrivKey);
+        byte[] entries = Card_Managment.getEntriesFromCard(channel);
+        return (doSecondHalfProtected(channel, entries, nonce1, nonce2, cardPubKey)[0] & 0xFF);  
     }
 
     private static void doFirstHalfProtected(byte[] ins, CardChannel channel, byte[] nonce1, byte[] nonce2, RSAPrivateKey terminalPrivKey) throws SignatureException, CardException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         

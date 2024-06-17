@@ -43,7 +43,7 @@ public class Card_Managment {
         }
     }
 
-    public static int getEntriesFromCard(CardChannel channel) {
+    public static byte[] getEntriesFromCard(CardChannel channel) {
         try {
             CommandAPDU apdu = new CommandAPDU(0x00, 0x1B, 0x00, 0x00);
 
@@ -52,10 +52,10 @@ public class Card_Managment {
                 throw new CardException("Failed to set entries. Response: " + Integer.toHexString(response.getSW()));
             }
 
-            return (response.getData()[0] & 0xFF);
+            return (response.getData());
         } catch (Exception e) {
             e.printStackTrace();
-            return 10;
+            return new byte[] {0x00};
         } 
     }
 
