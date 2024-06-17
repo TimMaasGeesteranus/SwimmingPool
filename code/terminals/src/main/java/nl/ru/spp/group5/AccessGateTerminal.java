@@ -50,12 +50,13 @@ public class AccessGateTerminal extends Terminal {
     @Override
     public void handleCard(CardChannel channel) throws InterruptedException, BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
         Utils.clearScreen();
+        System.out.println("Loading...");
         logger.info("Card detected, handling card...");
 
         // Mutual authentication
-        // if(!SecurityProtocols.mutualAuthentication(channel, true, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY)){
-        //     denyAccess();
-        // }
+        if(!SecurityProtocols.mutualAuthentication(channel, true, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY)){
+            denyAccess();
+        }
 
         try{
             // If card has season ticket, check certificate
@@ -130,11 +131,13 @@ public class AccessGateTerminal extends Terminal {
 
     public void openGate() {
         logger.info("Access granted, opening the gate...");
+        Utils.clearScreen();
         System.out.println("Welcome to the swimming pool!");
         System.out.println("...Opening the gate...");
     }
 
     public void denyAccess() {
+        Utils.clearScreen();
         logger.warning("Access denied.");
         System.out.println("Access denied...");
     }
