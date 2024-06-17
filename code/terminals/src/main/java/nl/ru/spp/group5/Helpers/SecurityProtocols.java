@@ -107,6 +107,21 @@ public class SecurityProtocols {
         return doSecondHalfProtected(channel, cert, nonce1, nonce2, cardPubKey);        
     }
 
+    public static void sendSeasonExpiryDateToCardProtected(CardChannel channel, RSAPrivateKey terminalPrivKey, byte[] cardPubKey, byte[] nonce1, byte[] nonce2, byte[] seasonExpiryDate) throws SignatureException, CardException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
+        doFirstHalfProtected(new byte[] {(byte) 0x2A}, channel, nonce1, nonce2, terminalPrivKey);
+        Card_Managment.sendSeasonExpiryDateToCard(channel, seasonExpiryDate);
+    }
+
+    public static boolean sendSeasonTicketCertificateProtected(CardChannel channel, RSAPrivateKey terminalPrivKey, byte[] cardPubKey, byte[] nonce1, byte[] nonce2, byte[] newCertificate) throws SignatureException, CardException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
+        doFirstHalfProtected(new byte[] {(byte) 0x2A}, channel, nonce1, nonce2, terminalPrivKey);
+        return Card_Managment.sendSeasonTicketCertificate(channel, newCertificate);
+    }
+
+    public static boolean setEntriesProtected(CardChannel channel, RSAPrivateKey terminalPrivKey, byte[] cardPubKey, byte[] nonce1, byte[] nonce2, String cardId, int entries) throws SignatureException, CardException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
+        doFirstHalfProtected(new byte[] {(byte) 0x2A}, channel, nonce1, nonce2, terminalPrivKey);
+        return Card_Managment.setEntries(channel, cardId, entries);
+    }
+
     private static void doFirstHalfProtected(byte[] ins, CardChannel channel, byte[] nonce1, byte[] nonce2, RSAPrivateKey terminalPrivKey) throws SignatureException, CardException, BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, InvalidKeySpecException, NoSuchAlgorithmException{         
         // Create message
         byte[] m1 = new byte[KEY_LENGTH];

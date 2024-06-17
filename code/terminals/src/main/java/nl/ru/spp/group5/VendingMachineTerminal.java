@@ -133,9 +133,10 @@ public class VendingMachineTerminal extends Terminal {
             System.out.println("Failed to generate new season ticket certificate.");
             return;
         }
-        Card_Managment.sendSeasonExpiryDateToCard(channel, seasonExpiryDate);
+        SecurityProtocols.sendSeasonExpiryDateToCardProtected(channel, terminalPrivKey, SecurityProtocols.getCardPubKey(channel), nonce1, nonce2, seasonExpiryDate);
 
-        boolean success = Card_Managment.sendSeasonTicketCertificate(channel, newCertificate);
+        boolean success = SecurityProtocols.sendSeasonTicketCertificateProtected(channel, terminalPrivKey, SecurityProtocols.getCardPubKey(channel), nonce1, nonce2, newCertificate);
+
         if (success) {
             System.out.println("Season ticket purchased successfully.");
         } else {
@@ -178,7 +179,7 @@ public class VendingMachineTerminal extends Terminal {
             return;
         }
 
-        boolean success = Card_Managment.setEntries(channel, cardId, 10);
+        boolean success = SecurityProtocols.setEntriesProtected(channel, terminalPrivKey, SecurityProtocols.getCardPubKey(channel), nonce1, nonce2, cardId, 10);
         if (success) {
             System.out.println("10-entry ticket purchased successfully.");
         } else {

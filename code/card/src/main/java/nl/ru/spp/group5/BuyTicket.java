@@ -59,6 +59,10 @@ public class BuyTicket {
     }
 
     void saveSeasonExpiryDate(APDU apdu){
+        // save m1
+        toZeroes(card.m1);
+        card.m1[0] = 0x2A;
+
         byte[] buffer = apdu.getBuffer();
         Util.arrayCopy(buffer, ISO7816.OFFSET_CDATA, card.seasonTicketExpirationDate, (short) 0, (short) Consts.CARD_EXP_DATE_LENGTH);
         
