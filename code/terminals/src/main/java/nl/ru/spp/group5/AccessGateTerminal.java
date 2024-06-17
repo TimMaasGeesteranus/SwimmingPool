@@ -50,16 +50,18 @@ public class AccessGateTerminal extends Terminal {
     @Override
     public void handleCard(CardChannel channel) throws InterruptedException, BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
         Utils.clearScreen();
+        System.out.println("Loading...");
         logger.info("Card detected, handling card...");
 
         // Mutual authentication
-        // if(!SecurityProtocols.mutualAuthentication(channel, true, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY)){
-        //     denyAccess();
-        // }
+        if(!SecurityProtocols.mutualAuthentication(channel, true, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY)){
+            denyAccess();
+        }
 
         try{
             // If card has season ticket, check certificate
-            byte[] cardSeasonCert = getSeasonCertFromCard(channel);
+            byte[] cardSeasonCert = SecurityProtocols.requestSeasonTicketCertificateProtected(channel, TERMINAL_PRIV_KEY, SecurityProtocols.getCardPubKey(channel), nonce1, nonce2);
+
             if(cardSeasonCert != null){
                 if(isCertValid(channel, cardSeasonCert)){
                     openGate();
@@ -80,21 +82,7 @@ public class AccessGateTerminal extends Terminal {
         }       
     }
 
-    private static byte[] getSeasonCertFromCard(CardChannel channel) throws CardException{  
-        // Sending cert request
-        CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x26, 0x00, 0x00);
-        ResponseAPDU response = channel.transmit(apdu);
-
-        // Verifying response
-        if (response.getSW() != 0x9000){
-            System.out.println(response.getSW());
-            throw new CardException("something went wrong when requesting season ticket");
-        }
-
-        return response.getData();
-    }
-
-    private boolean isCertValid(CardChannel channel, byte[] cardSeasonCert) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException{        
+    private boolean isCertValid(CardChannel channel, byte[] cardSeasonCert) throws NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, SignatureException, CardException{        
         // Concatenate cardID, cardExpirationdate and pubKeyCard so cert can be validated
         byte[] data = new byte[CARD_ID_LENGTH + CARD_EXP_DATE_LENGTH];
         byte[] cardID = SecurityProtocols.getCardID(channel);
@@ -116,8 +104,9 @@ public class AccessGateTerminal extends Terminal {
         return sig.verify(cardSeasonCert);
     }
 
-    private boolean cardHasEntry(CardChannel channel){
-        int entries = Card_Managment.getEntriesFromCard(channel);
+    private boolean cardHasEntry(CardChannel channel) throws NoSuchAlgorithmException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, SignatureException, BadPaddingException, CardException{        
+        int entries = SecurityProtocols.getEntriesFromCardProtected(channel, TERMINAL_PRIV_KEY, SecurityProtocols.getCardPubKey(channel), nonce1, nonce2);
+
 
         // Delete entry from card
         if(entries > 0){
@@ -130,11 +119,13 @@ public class AccessGateTerminal extends Terminal {
 
     public void openGate() {
         logger.info("Access granted, opening the gate...");
+        Utils.clearScreen();
         System.out.println("Welcome to the swimming pool!");
         System.out.println("...Opening the gate...");
     }
 
     public void denyAccess() {
+        Utils.clearScreen();
         logger.warning("Access denied.");
         System.out.println("Access denied...");
     }

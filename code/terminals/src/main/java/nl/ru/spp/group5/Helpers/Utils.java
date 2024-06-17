@@ -119,6 +119,14 @@ public class Utils {
         return signature.sign();
     }
 
+    public static byte[] signWithSHA1(byte[] data, RSAPrivateKey key) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException{
+        Signature signature = Signature.getInstance("SHA1withRSA");
+        signature.initSign(key);
+        signature.update(data);
+
+        return signature.sign();
+    }
+
     public static RSAPublicKey readPubKey() throws FileNotFoundException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         File file = new File("terminal_pubkey.pem");
 

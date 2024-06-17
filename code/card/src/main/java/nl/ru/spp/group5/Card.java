@@ -1,6 +1,6 @@
 package nl.ru.spp.group5;
 
-import javacardx.crypto.Cipher;
+import javacardx.crypto.*;
 import javacard.framework.*;
 import javacard.security.*;
 
@@ -47,10 +47,6 @@ public class Card extends Applet {
     protected byte[] pubKeyVendingBytes;
     protected RSAPublicKey pubKeyVending;
 
-    // ACCESS POOL
-    private final Access access;
-    private static final byte INS_ACCESS_GET_SEASON_CERT = (byte) 0x26;
-
     // BUY TICKET
     private final BuyTicket buyTicket;
     private static final byte INS_REQUEST_SEASON_TICKET_CERTIFICATE = (byte) 0x09;
@@ -67,6 +63,20 @@ public class Card extends Applet {
     // BLOCKING
     private static final byte INS_BLOCK_CARD = (byte) 0x07;
     private boolean isBlocked;
+
+    // PROTECTED MESSAGING
+    private final MessageProtected messageProtected;
+    private static final byte INS_SET_S1_FIRST_HALF = (byte) 0x1C;
+    private static final byte INS_SET_S1_SECOND_HALF = (byte) 0x1D;
+    private static final byte INS_GET_S2 = (byte) 0x1E;
+    protected byte[] s1;
+    protected byte[] s1Decrypted;
+    protected byte[] s2;
+    protected byte[] m1;
+    protected byte[] m2;
+    protected byte[] data;
+    protected byte counter;
+    protected Signature signature;
 
     private Card() {
         cardState = STATE_INITIAL;
@@ -86,12 +96,19 @@ public class Card extends Applet {
         pubKeyVendingBytes = new byte[Consts.KEY_LENGTH];
         cipher = Cipher.getInstance(Cipher.ALG_RSA_NOPAD, false);
         random = RandomData.getInstance(RandomData.ALG_SECURE_RANDOM);
-
+        s1 = new byte[Consts.KEY_LENGTH];
+        s1Decrypted = new byte[Consts.KEY_LENGTH];
+        s2 = new byte[Consts.KEY_LENGTH];
+        m1 = new byte[Consts.KEY_LENGTH];
+        m2 = new byte[Consts.KEY_LENGTH];
+        data = new byte[Consts.KEY_LENGTH+Consts.NONCE_LENGTH+Consts.NONCE_LENGTH+1];
+        counter = 0;
+        signature = Signature.getInstance(Signature.ALG_RSA_SHA_PKCS1, false);
 
         init = new Init(this);
         auth = new Auth(this);
-        access = new Access(this);
         buyTicket = new BuyTicket(this);
+        messageProtected = new MessageProtected(this);
 
         register();
     }
@@ -175,8 +192,14 @@ public class Card extends Applet {
             case INS_AUTHENTICATE_TERMINAL_SECOND_HALF:
                 auth.authenticateTerminalSecondHalf(apdu);
                 break;
-            case INS_ACCESS_GET_SEASON_CERT:
-                access.returnSeasonCert(apdu);
+            case INS_SET_S1_FIRST_HALF:
+                messageProtected.sets1FirstHalf(apdu);
+                break;
+            case INS_SET_S1_SECOND_HALF:
+                messageProtected.sets1SecondHalf(apdu);
+                break;
+            case INS_GET_S2:
+                messageProtected.gets2(apdu);
                 break;
             default:
                 ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
