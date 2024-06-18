@@ -1,5 +1,8 @@
 package nl.ru.spp.group5;
 
+import static nl.ru.spp.group5.Helpers.Utils.bytesToHex;
+import static nl.ru.spp.group5.Helpers.Utils.bytesToString;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -17,6 +20,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
+import javax.smartcardio.CardTerminal;
 
 import nl.ru.spp.group5.Helpers.Backend;
 import nl.ru.spp.group5.Helpers.Card_Managment;
@@ -37,11 +41,11 @@ public class VendingMachineTerminal extends Terminal {
     }
 
     @Override
-    public void handleCard(CardChannel channel) throws InterruptedException, BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
+    public void handleCard(CardChannel channel, CardTerminal terminal) throws InterruptedException, BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
         Scanner scanner = new Scanner(System.in);
         Utils.clearScreen();
 
-        while (true) {
+        while (terminal.isCardPresent()) {
             System.out.println("Welcome to the vending machine. What do you want to do?");
             System.out.println("1: Buy a new card");
             System.out.println("2: Buy a season ticket");
@@ -52,7 +56,13 @@ public class VendingMachineTerminal extends Terminal {
 
             switch (userInput) {
                 case "1":
-                    buyNewCard(channel, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
+                    try{
+                        buyNewCard(channel, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
+                    } catch(CardException e){
+                        System.out.println(e.getMessage());
+                        System.out.println("");
+                        break;
+                    }
                     break;
                 case "2":
                     buySeasonTicket(channel, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
@@ -62,12 +72,6 @@ public class VendingMachineTerminal extends Terminal {
                     break;
                 case "4":
                     blockCard("0");
-                    break;
-                case "5":
-                    SecurityProtocols.mutualAuthentication(channel, false, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY);
-                    break;
-                case "6":
-                    System.out.println(new String(SecurityProtocols.getCardIDProtected(channel, TERMINAL_PRIV_KEY, SecurityProtocols.getCardPubKey(channel), nonce1, nonce2)));
                     break;
                 default:
                     Utils.clearScreen();
@@ -83,8 +87,16 @@ public class VendingMachineTerminal extends Terminal {
         System.out.println("loading...");
 
         byte[] cardID = SecurityProtocols.getCardID(channel);
-        String cardIDString = new String(cardID);
 
+        // Check if card was issued
+        if(Utils.isAllZeros(cardID)){
+            Utils.clearScreen();
+            System.out.println("Purchased cancelled. Cannot buy a season ticket without buying the card first.");
+            System.out.println("");
+            return;
+        }
+
+        String cardIDString = new String(cardID);
 
         if (Backend.isCardBlocked(cardIDString)) {
             System.out.println("This card is blocked. Returning to the menu.");
@@ -103,10 +115,10 @@ public class VendingMachineTerminal extends Terminal {
         boolean isCertificateValid = !Utils.isAllZeros(currentCertificate);
         Utils.clearScreen();
         if (isCertificateValid) {
-            String expiryDate = "test"; //TODO change
             System.out.println("A season ticket already exists on this card.");
-            System.out.println("Current season ticket expires on: " + expiryDate);
+            System.out.println("");
             System.out.println("Buying a new season ticket will override the old one and you will lose the remaining days.");
+            System.out.println("");
             System.out.println("Do you still want to proceed? (yes/no)");
             String confirmation = scanner.nextLine();
             if (!confirmation.equalsIgnoreCase("yes")) {
@@ -153,7 +165,17 @@ public class VendingMachineTerminal extends Terminal {
         Utils.clearScreen();
 
         System.out.println("Requesting 10-entry ticket...");
-        String cardId = new String(SecurityProtocols.getCardID(channel));
+        byte[] cardID = SecurityProtocols.getCardID(channel);
+
+        // Check if card was issued
+        if(Utils.isAllZeros(cardID)){
+            Utils.clearScreen();
+            System.out.println("Purchased cancelled. Cannot buy a 10-entry ticket without buying the card first.");
+            System.out.println("");
+            return;
+        }
+
+        String cardId = new String(cardID);
 
         if (Backend.isCardBlocked(cardId)) {
             System.out.println("This card is blocked. Returning to the menu.");

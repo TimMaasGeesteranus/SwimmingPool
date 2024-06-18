@@ -51,8 +51,7 @@ public class Init {
         // Verifying response
          ResponseAPDU response = channel.transmit(apdu);
          if (response.getSW() == 27014){
-            System.out.println("Card is already issued and cannot be issued again.");
-            System.exit(1);
+            throw new CardException("Card is already issued and cannot be issued again.");
          }
          else if (response.getSW() != 0x9000){
             System.out.println("something went wrong");

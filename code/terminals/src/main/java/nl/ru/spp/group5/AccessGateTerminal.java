@@ -48,10 +48,18 @@ public class AccessGateTerminal extends Terminal {
     }
 
     @Override
-    public void handleCard(CardChannel channel) throws InterruptedException, BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
+    public void handleCard(CardChannel channel, CardTerminal terminal) throws InterruptedException, BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, InvalidKeySpecException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, CardException {
         Utils.clearScreen();
         System.out.println("Loading...");
         logger.info("Card detected, handling card...");
+
+        byte[] cardID = SecurityProtocols.getCardID(channel);
+
+        // Check if card was issued
+        if(Utils.isAllZeros(cardID)){
+            denyAccess();
+            return;
+        }
 
         // Mutual authentication
         if(!SecurityProtocols.mutualAuthentication(channel, true, TERMINAL_PUB_KEY, TERMINAL_PRIV_KEY)){

@@ -55,7 +55,7 @@ public abstract class Terminal{
                 if (terminal.isCardPresent()) {
                     CardChannel channel = terminal.connect("*").getBasicChannel();
                     if (appletSelectedSuccessfully(channel)){
-                        handleCard(channel);
+                        handleCard(channel, terminal);
                     }
                     // Wait for card to be removed before checking again
                     while (terminal.isCardPresent()) {
@@ -69,7 +69,7 @@ public abstract class Terminal{
         }
     }
 
-    abstract public void handleCard(CardChannel channel) throws BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeySpecException, InterruptedException, SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException;
+    abstract public void handleCard(CardChannel channel, CardTerminal terminal) throws BadPaddingException, IllegalBlockSizeException, NoSuchPaddingException, InvalidKeySpecException, InterruptedException, SignatureException, InvalidKeyException, NoSuchAlgorithmException, CardException;
 
     private boolean appletSelectedSuccessfully(CardChannel channel) throws CardException{
         byte[] apduBytes = {
