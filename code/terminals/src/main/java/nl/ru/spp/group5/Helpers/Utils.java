@@ -35,7 +35,7 @@ public class Utils {
     public final static int CERT_LENGTH = KEY_LENGTH;
 
     // Method to generate a nonce for cryptographic protocols
-    // TODO: make this a counter bc thats more safe than using random
+    
     public static byte[] generateNonce() {
         SecureRandom random = new SecureRandom();
         byte[] nonce = new byte[NONCE_LENGTH]; // 16 bytes nonce
@@ -43,7 +43,7 @@ public class Utils {
         return nonce;
     }
     
-    // TODO: maybe not do this random bc duplicates?
+    
     public static byte[] generateCardID(){
         byte[] cardID = new byte[CARD_ID_LENGTH];
         Random random = new Random();

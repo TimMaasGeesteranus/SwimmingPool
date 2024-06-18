@@ -261,7 +261,7 @@ public class SecurityProtocols {
     }
 
     private static byte[] sendNonce1AndGetx1(CardChannel channel, byte[] nonce1) throws CardException{
-        //TODO: generate cert if gate and send to card
+        
 
         // Sending nonce
         CommandAPDU apdu = new CommandAPDU(0x00, (byte)0x13, 0x00, 0x00, nonce1);
